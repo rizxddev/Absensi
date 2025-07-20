@@ -47,24 +47,25 @@ export default function Home() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 to-indigo-300">
-      <div className="bg-white shadow-2xl rounded-2xl p-8 max-w-md w-full text-center">
-        <h1 className="text-3xl font-bold text-indigo-700 mb-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white relative">
+      <div className="bg-gradient-to-br from-indigo-700 to-purple-700 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-indigo-400/50 backdrop-blur-md">
+        <div className="text-5xl mb-4 animate-pulse">👑</div>
+        <h1 className="text-3xl font-bold text-indigo-200 drop-shadow-lg mb-2">
           Sistem Absensi Sekolah
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-300 mb-6">
           Pilih untuk login sebagai Admin atau Guru.
         </p>
         <div className="space-y-4">
           <button
             onClick={() => openModal('guru')}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors text-lg"
+            className="w-full py-3 text-lg rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-600 hover:to-blue-600 shadow-lg hover:shadow-blue-500/50 transition-all duration-300"
           >
             Login Guru
           </button>
           <button
             onClick={() => openModal('admin')}
-            className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors text-lg"
+            className="w-full py-3 text-lg rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-emerald-600 hover:to-green-600 shadow-lg hover:shadow-green-500/50 transition-all duration-300"
           >
             Login Admin
           </button>
@@ -76,25 +77,26 @@ export default function Home() {
 
       {/* Modal Login */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl w-80">
-            <h2 className="text-xl font-bold text-center text-indigo-700 mb-4">
-              {role === 'admin' ? 'Login Admin' : 'Login Guru'}
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 animate-fadeIn">
+          <div className="bg-gray-900 border border-indigo-400/50 p-6 rounded-2xl shadow-2xl w-80 animate-slideUp">
+            <h2 className="text-xl font-bold text-center text-indigo-200 mb-4">
+              {role === 'admin' ? '🔒 Login Admin' : '👩‍🏫 Login Guru'}
             </h2>
 
+            {/* Username hanya untuk Guru */}
             {role === 'guru' && (
               <input
                 type="text"
-                placeholder="Username"
-                className="w-full border rounded-lg px-3 py-2 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                placeholder="Username Guru"
+                className="w-full border border-indigo-400 rounded-lg px-3 py-2 mb-3 bg-gray-800 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
               />
             )}
             <input
               type="password"
-              placeholder="Password"
-              className="w-full border rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              placeholder={role === 'admin' ? 'Password Admin' : 'Password Guru'}
+              className="w-full border border-indigo-400 rounded-lg px-3 py-2 mb-4 bg-gray-800 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
@@ -102,13 +104,13 @@ export default function Home() {
             <div className="flex gap-2">
               <button
                 onClick={closeModal}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg transition-colors"
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors"
               >
                 Batal
               </button>
               <button
                 onClick={handleLogin}
-                className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg transition-colors"
+                className="flex-1 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-600 hover:to-indigo-600 text-white py-2 rounded-lg shadow-lg hover:shadow-indigo-500/50 transition-all duration-300"
               >
                 Login
               </button>
@@ -116,6 +118,24 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Animasi tambahan di global.css */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        .animate-slideUp {
+          animation: slideUp 0.4s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
-                  }
+      }
