@@ -3,20 +3,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Hanya method POST yang diizinkan' });
   }
 
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // isi di Vercel
-  const OWNER = 'rizxddev';       // nama github
-  const REPO = 'Absensi';         // nama repo
-  const PATH = 'public/siswa.json';             // simpan di folder public
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
+  const OWNER = process.env.GITHUB_OWNER;       
+  const REPO = process.env.GITHUB_REPO;         
+  const PATH = 'public/siswa.json';             
 
   try {
-    // Ambil sha file lama untuk update
     const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
     const resp = await fetch(url, { headers: { Authorization: `Bearer ${GITHUB_TOKEN}` } });
     const fileData = await resp.json();
     const sha = fileData.sha || null;
 
-    // Encode data siswa jadi Base64 untuk commit ke GitHub
-    const encoded = Buffer.from(JSON.stringify(req.body, null, 2)).toString('base64');
+    // Pastikan struktur JSON tetap { siswa: [...] }
+    let newContent = req.body;
+    if (!newContent.siswa) {
+      newContent = { siswa: [] };
+    }
+
+    const encoded = Buffer.from(JSON.stringify(newContent, null, 2)).toString('base64');
 
     const save = await fetch(url, {
       method: 'PUT',
