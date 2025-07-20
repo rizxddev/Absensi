@@ -164,8 +164,8 @@ export default function Admin() {
           </tr>
           <tr className="bg-gray-100">
             <th></th><th></th>
-            <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Dispen</th>
-            <th>Ya</th><th>Tidak</th>
+            <th>Hadir</th> <th>Izin</th> <th>Sakit</th> <th>Alpha</th> <th>Dispen</th> 
+            <th>Ya</th> <th>Tidak</th>
             <th></th>
           </tr>
         </thead>
