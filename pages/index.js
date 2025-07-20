@@ -3,13 +3,13 @@ import { useRouter } from 'next/router';
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
-  const [role, setRole] = useState(''); // 'guru' atau 'admin'
+  const [role, setRole] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [guruList, setGuruList] = useState([]);
   const router = useRouter();
 
-  // Ambil data guru untuk login guru
+  // Ambil daftar guru untuk login guru
   useEffect(() => {
     fetch('/guru.json')
       .then(r => r.json())
@@ -54,7 +54,7 @@ export default function Home() {
           Sistem Absensi Sekolah
         </h1>
         <p className="text-gray-600 mb-6">
-          Silakan pilih untuk login sebagai Admin atau Guru.
+          Pilih untuk login sebagai Admin atau Guru.
         </p>
         <div className="space-y-4">
           <button
@@ -75,13 +75,15 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Modal Login */}
+      {/* Modal Login (Pop-up) */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-80 relative">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-80 animate-fadeIn">
             <h2 className="text-xl font-bold text-center text-indigo-700 mb-4">
               {role === 'admin' ? 'Login Admin' : 'Login Guru'}
             </h2>
+
+            {/* Username hanya untuk Guru */}
             {role === 'guru' && (
               <input
                 type="text"
@@ -91,6 +93,8 @@ export default function Home() {
                 onChange={e => setUsername(e.target.value)}
               />
             )}
+
+            {/* Password */}
             <input
               type="password"
               placeholder="Password"
@@ -98,7 +102,9 @@ export default function Home() {
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
-            <div className="flex justify-between gap-2">
+
+            {/* Tombol */}
+            <div className="flex gap-2">
               <button
                 onClick={closeModal}
                 className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg transition-colors"
