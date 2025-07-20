@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // simpan di Vercel
   const OWNER = 'rizxddev';  // ganti username
   const REPO = 'Absensi';         // ganti repo
-  const PATH = 'data/guru.json';    // file target di repo
+  const PATH = 'public/guru.json';    // file target di repo
 
   const newData = req.body; // { guru: [...] }
 
