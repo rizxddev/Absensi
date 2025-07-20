@@ -1,14 +1,12 @@
 async function getLatestSha(owner, repo, path, token) {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   const data = await res.json();
   return data.sha || null;
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Hanya POST' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Hanya POST diizinkan' });
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   const OWNER = process.env.GITHUB_OWNER;
@@ -29,6 +27,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({ message: 'Update hasil absensi', content: contentEncoded, sha })
     });
 
+    const result = await save.json();
+
     if (save.status === 409) {
       sha = await getLatestSha(OWNER, REPO, PATH, GITHUB_TOKEN);
       const retry = await fetch(url, {
@@ -40,11 +40,17 @@ export default async function handler(req, res) {
         body: JSON.stringify({ message: 'Retry update hasil absensi', content: contentEncoded, sha })
       });
       const retryResult = await retry.json();
-      return res.status(retry.status).json(retryResult);
+      if (retry.status === 200 || retry.status === 201) {
+        return res.status(200).json({ success: true, commitSha: retryResult.commit?.sha });
+      }
+      return res.status(retry.status).json({ error: retryResult });
     }
 
-    const result = await save.json();
-    return res.status(save.status).json(result);
+    if (save.status === 200 || save.status === 201) {
+      return res.status(200).json({ success: true, commitSha: result.commit?.sha });
+    }
+
+    return res.status(save.status).json({ error: result });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
