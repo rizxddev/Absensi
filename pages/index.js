@@ -9,7 +9,6 @@ export default function Home() {
   const [guruList, setGuruList] = useState([]);
   const router = useRouter();
 
-  // Ambil daftar guru untuk login guru
   useEffect(() => {
     fetch('/guru.json')
       .then(r => r.json())
@@ -75,15 +74,14 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Modal Login (Pop-up) */}
+      {/* Modal Login */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl w-80 animate-fadeIn">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-80">
             <h2 className="text-xl font-bold text-center text-indigo-700 mb-4">
               {role === 'admin' ? 'Login Admin' : 'Login Guru'}
             </h2>
 
-            {/* Username hanya untuk Guru */}
             {role === 'guru' && (
               <input
                 type="text"
@@ -93,8 +91,6 @@ export default function Home() {
                 onChange={e => setUsername(e.target.value)}
               />
             )}
-
-            {/* Password */}
             <input
               type="password"
               placeholder="Password"
@@ -103,7 +99,6 @@ export default function Home() {
               onChange={e => setPassword(e.target.value)}
             />
 
-            {/* Tombol */}
             <div className="flex gap-2">
               <button
                 onClick={closeModal}
@@ -123,4 +118,4 @@ export default function Home() {
       )}
     </div>
   );
-}
+                  }
