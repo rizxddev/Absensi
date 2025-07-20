@@ -10,7 +10,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/public/guru.json')
+    fetch('/guru.json')
       .then(r => r.json())
       .then(json => setGuruList(json.guru || []));
   }, []);
