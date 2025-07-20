@@ -39,35 +39,35 @@ export default function Admin() {
 
   // Simpan daftar siswa ke GitHub
   const simpanSiswa = async (list) => {
-    const res = await fetch('/api/updateSiswa', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ siswa: list })
-    });
-    const json = await res.json();
-    if (json.success) {
-      alert('Daftar siswa berhasil disimpan!');
-    } else {
-      alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
-    }
-  };
+  const res = await fetch('/api/updateSiswa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siswa: list })
+  });
+  const json = await res.json();
+  if (json.success) {
+    alert('Daftar siswa berhasil disimpan!');
+  } else {
+    alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
+  }
+};
 
   const tambahSiswa = () => {
-    const nama = prompt('Nama siswa baru:');
-    if (nama) {
-      const updated = [...siswa, { id: Date.now(), nama }];
-      setSiswa(updated);
-      simpanSiswa(updated);
-    }
-  };
+  const nama = prompt('Nama siswa baru:');
+  if (nama) {
+    const updated = [...(siswa || []), { id: Date.now(), nama }];
+    setSiswa(updated);
+    simpanSiswa(updated);
+  }
+};
 
   const hapusSiswa = (id) => {
-    if (confirm('Hapus siswa ini?')) {
-      const updated = siswa.filter(s => s.id !== id);
-      setSiswa(updated);
-      simpanSiswa(updated);
-    }
-  };
+  if (confirm('Hapus siswa ini?')) {
+    const updated = (siswa || []).filter(s => s.id !== id);
+    setSiswa(updated);
+    simpanSiswa(updated);
+  }
+};
 
   const tambahGuru = () => {
     const username = prompt('Masukkan username guru:');
