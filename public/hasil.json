@@ -1,5 +1,13 @@
 {
   "kelas": "XI C",
   "wali_kelas": "Gungun Nugraha",
-  "absensi": {}
+  "absensi": {
+    "2025-07-20": [
+      {
+        "nama": "rizky",
+        "sekolah": "Hadir",
+        "shalat": "Ya"
+      }
+    ]
+  }
 }
