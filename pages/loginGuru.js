@@ -8,7 +8,6 @@ export default function LoginGuru() {
   const router = useRouter();
 
   useEffect(() => {
-    // Ambil daftar guru dari guru.json (disimpan di GitHub/public)
     fetch('/guru.json')
       .then(r => r.json())
       .then(json => setGuruList(json.guru || []));
@@ -19,37 +18,43 @@ export default function LoginGuru() {
       g => g.username === username && g.password === password
     );
     if (found) {
-      localStorage.setItem('guru_login', username); // simpan status login
-      alert(`Selamat datang, ${username}!`);
-      router.push('/guru'); // arahkan ke halaman guru
+      localStorage.setItem('guru_login', username);
+      router.push('/guru');
     } else {
       alert('Username atau password salah!');
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen space-y-4">
-      <h2 className="text-2xl font-bold">Login Guru</h2>
-      <input
-        type="text"
-        className="border px-3 py-2 w-64"
-        placeholder="Username"
-        value={username}
-        onChange={e => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        className="border px-3 py-2 w-64"
-        placeholder="Password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-      />
-      <button
-        className="bg-blue-500 text-white px-5 py-2 rounded"
-        onClick={handleLogin}
-      >
-        Login
-      </button>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-300">
+      <div className="bg-white shadow-xl rounded-2xl p-8 max-w-sm w-full">
+        <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">Login Guru</h2>
+        <div className="space-y-4">
+          <input
+            type="text"
+            className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            placeholder="Username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+          />
+          <input
+            type="password"
+            className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+          <button
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors"
+            onClick={handleLogin}
+          >
+            Login
+          </button>
+        </div>
+        <p className="mt-4 text-center text-gray-500 text-sm">
+          Sistem Absensi Sekolah © 2025
+        </p>
+      </div>
     </div>
   );
 }
