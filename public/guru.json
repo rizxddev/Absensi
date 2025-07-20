@@ -1,5 +1,12 @@
 {
   "guru": [
-    { "username": "gungun", "password": "123" }
+    {
+      "username": "gungun",
+      "password": "123"
+    },
+    {
+      "username": "tess",
+      "password": "12"
+    }
   ]
 }
