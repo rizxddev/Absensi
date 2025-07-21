@@ -9,10 +9,10 @@ export default function Admin() {
   const [siswa, setSiswa] = useState([]);
   const [guruList, setGuruList] = useState([]);
 
-  // Fungsi ambil file JSON dari server
+  // Ambil file JSON tanpa cache (biar selalu fresh)
   const fetchLatest = async (file) => {
     try {
-      const res = await fetch(`/${file}`);
+      const res = await fetch(`/${file}?t=${Date.now()}`, { cache: 'no-store' });
       return await res.json();
     } catch {
       return {};
@@ -24,24 +24,22 @@ export default function Admin() {
     setSiswa(json.siswa || []);
   };
 
+  const fetchGuru = async () => {
+    const json = await fetchLatest('guru.json');
+    setGuruList(json.guru || []);
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('admin_ok');
     if (token) {
       setLoggedIn(true);
-
-      // Ambil data guru
-      fetch('/guru.json')
-        .then(r => r.json())
-        .then(json => setGuruList(json.guru || []))
-        .catch(() => setGuruList([]));
-
-      // Ambil daftar siswa awal
+      fetchGuru();
       fetchSiswa();
     }
   }, []);
 
   const login = () => {
-    const ADMIN_PASS = "1234"; // ganti sesuai kebutuhan
+    const ADMIN_PASS = "1234"; // Ganti sesuai kebutuhan
     if (password === ADMIN_PASS) {
       localStorage.setItem('admin_ok', 'true');
       setLoggedIn(true);
@@ -50,6 +48,7 @@ export default function Admin() {
     }
   };
 
+  // Simpan siswa ke GitHub + refresh
   const simpanSiswa = async (list) => {
     const res = await fetch('/api/updateSiswa', {
       method: 'POST',
@@ -58,8 +57,8 @@ export default function Admin() {
     });
     const json = await res.json();
     if (json.success) {
+      await fetchSiswa();  // Ambil ulang daftar siswa
       alert('Daftar siswa berhasil disimpan!');
-      fetchSiswa(); // Refresh tampilan
     } else {
       alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
     }
@@ -71,10 +70,8 @@ export default function Admin() {
 
     const latest = await fetchLatest('siswa.json');
     const current = latest.siswa || [];
-
     const updated = [...current, { id: Date.now(), nama }];
-    setSiswa(updated);
-    simpanSiswa(updated);
+    await simpanSiswa(updated);  // Simpan & refresh otomatis
   };
 
   const hapusSiswa = async (id) => {
@@ -82,30 +79,11 @@ export default function Admin() {
 
     const latest = await fetchLatest('siswa.json');
     const current = latest.siswa || [];
-
     const updated = current.filter(s => s.id !== id);
-    setSiswa(updated);
-    simpanSiswa(updated);
+    await simpanSiswa(updated);  // Simpan & refresh otomatis
   };
 
-  const tambahGuru = () => {
-    const username = prompt('Masukkan username guru:');
-    const pass = prompt('Masukkan password guru:');
-    if (username && pass) {
-      const updated = [...guruList, { username, password: pass }];
-      setGuruList(updated);
-      simpanGuru(updated);
-    }
-  };
-
-  const hapusGuru = (username) => {
-    if (confirm(`Hapus guru ${username}?`)) {
-      const updated = guruList.filter(g => g.username !== username);
-      setGuruList(updated);
-      simpanGuru(updated);
-    }
-  };
-
+  // CRUD Guru
   const simpanGuru = async (list) => {
     const res = await fetch('/api/updateGuru', {
       method: 'POST',
@@ -114,14 +92,32 @@ export default function Admin() {
     });
     const json = await res.json();
     if (json.success) {
+      await fetchGuru();  // Ambil ulang daftar guru
       alert('Data guru berhasil disimpan!');
     } else {
       alert('Gagal simpan guru: ' + JSON.stringify(json.error || json));
     }
   };
 
+  const tambahGuru = () => {
+    const username = prompt('Masukkan username guru:');
+    const pass = prompt('Masukkan password guru:');
+    if (username && pass) {
+      const updated = [...guruList, { username, password: pass }];
+      simpanGuru(updated);
+    }
+  };
+
+  const hapusGuru = (username) => {
+    if (confirm(`Hapus guru ${username}?`)) {
+      const updated = guruList.filter(g => g.username !== username);
+      simpanGuru(updated);
+    }
+  };
+
+  // Simpan absensi siswa ke GitHub
   const simpanAbsensi = async () => {
-    const latest = await fetchLatest('siswa.json');
+    const latest = await fetchLatest('siswa.json');  // Pastikan ambil data terbaru
     const siswaList = latest.siswa || siswa;
 
     const hasil = siswaList.map(s => ({
@@ -160,10 +156,7 @@ export default function Admin() {
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          onClick={login}
-        >
+        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={login}>
           Login
         </button>
       </div>
@@ -192,9 +185,8 @@ export default function Admin() {
           </tr>
           <tr className="bg-gray-100">
             <th></th><th></th>
-            <th>Hadir</th> <th>Izin</th> <th>Sakit</th> <th>Alpha</th> <th>Dispen</th> 
-            <th>Ya</th> <th>Tidak</th>
-            <th></th>
+            <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Dispen</th>
+            <th>Ya</th><th>Tidak</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -210,12 +202,7 @@ export default function Admin() {
               <td><input type="radio" name={`shalat_${s.id}`} value="Ya" defaultChecked /></td>
               <td><input type="radio" name={`shalat_${s.id}`} value="Tidak" /></td>
               <td>
-                <button
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                  onClick={() => hapusSiswa(s.id)}
-                >
-                  Hapus
-                </button>
+                <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => hapusSiswa(s.id)}>Hapus</button>
               </td>
             </tr>
           ))}
@@ -244,12 +231,7 @@ export default function Admin() {
                   <td>{g.username}</td>
                   <td>{g.password}</td>
                   <td>
-                    <button
-                      className="bg-red-500 text-white px-3 py-1 rounded"
-                      onClick={() => hapusGuru(g.username)}
-                    >
-                      Hapus
-                    </button>
+                    <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => hapusGuru(g.username)}>Hapus</button>
                   </td>
                 </tr>
               ))
