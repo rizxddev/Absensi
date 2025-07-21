@@ -1,3 +1,36 @@
 {
-  "siswa": []
+  "siswa": [
+    {
+      "id": 1753026744764,
+      "nama": "CANDRA AHMAD SETIAWAN"
+    },
+    {
+      "id": 1753026767141,
+      "nama": "DAVID SOMANTRI"
+    },
+    {
+      "id": 1753026786686,
+      "nama": "DENIS SUTRISNO"
+    },
+    {
+      "id": 1753026815307,
+      "nama": "EKA SYAHRIL GUSTIAN"
+    },
+    {
+      "id": 1753026836480,
+      "nama": "ERWAN HERYANTO"
+    },
+    {
+      "id": 1753026875538,
+      "nama": "HAMID FAUZIN"
+    },
+    {
+      "id": 1753026907036,
+      "nama": "JENAL ABIDIN ABDUL ROJAK"
+    },
+    {
+      "id": 1753026940665,
+      "nama": "JUNIOR MIFTAH MERDEKA"
+    }
+  ]
 }
