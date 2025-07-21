@@ -10,7 +10,6 @@ async function commitToGitHub({ owner, repo, path, token, content, message }) {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   const encoded = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
 
-  // Coba commit sampai 3 kali
   for (let attempt = 1; attempt <= 3; attempt++) {
     const res = await fetch(url, {
       method: 'PUT',
@@ -23,14 +22,13 @@ async function commitToGitHub({ owner, repo, path, token, content, message }) {
 
     if (res.status === 200 || res.status === 201) {
       const result = await res.json();
-      return { success: true, commitSha: result.commit?.sha };
+      return { success: true, message: 'Data absensi berhasil disimpan!', commitSha: result.commit?.sha };
     }
 
     if (res.status === 409 && attempt < 3) {
-      // Tunggu 0.5 detik dan ambil SHA terbaru
       await new Promise(r => setTimeout(r, 500));
       sha = await getLatestSha(owner, repo, path, token);
-      continue; // retry
+      continue;
     }
 
     const error = await res.json();
