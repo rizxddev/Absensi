@@ -5,6 +5,37 @@ async function getLatestSha(owner, repo, path, token) {
   return data.sha || null;
 }
 
+async function commitToGitHub({ owner, repo, path, token, content, message }) {
+  let sha = await getLatestSha(owner, repo, path, token);
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  const encoded = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message, content: encoded, sha })
+    });
+
+    if (res.status === 200 || res.status === 201) {
+      const result = await res.json();
+      return { success: true, message: 'Daftar siswa berhasil disimpan!', commitSha: result.commit?.sha };
+    }
+
+    if (res.status === 409 && attempt < 3) {
+      await new Promise(r => setTimeout(r, 500));
+      sha = await getLatestSha(owner, repo, path, token);
+      continue;
+    }
+
+    const error = await res.json();
+    return { success: false, error };
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Hanya POST diizinkan' });
 
@@ -14,43 +45,17 @@ export default async function handler(req, res) {
   const PATH = 'public/siswa.json';
 
   try {
-    let sha = await getLatestSha(OWNER, REPO, PATH, GITHUB_TOKEN);
-    const contentEncoded = Buffer.from(JSON.stringify(req.body, null, 2)).toString('base64');
-    const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
-
-    const save = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message: 'Update daftar siswa', content: contentEncoded, sha })
+    const result = await commitToGitHub({
+      owner: OWNER,
+      repo: REPO,
+      path: PATH,
+      token: GITHUB_TOKEN,
+      content: req.body,
+      message: 'Update daftar siswa'
     });
 
-    const result = await save.json();
-
-    if (save.status === 409) {
-      sha = await getLatestSha(OWNER, REPO, PATH, GITHUB_TOKEN);
-      const retry = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message: 'Retry update daftar siswa', content: contentEncoded, sha })
-      });
-      const retryResult = await retry.json();
-      if (retry.status === 200 || retry.status === 201) {
-        return res.status(200).json({ success: true, commitSha: retryResult.commit?.sha });
-      }
-      return res.status(retry.status).json({ error: retryResult });
-    }
-
-    if (save.status === 200 || save.status === 201) {
-      return res.status(200).json({ success: true, commitSha: result.commit?.sha });
-    }
-
-    return res.status(save.status).json({ error: result });
+    if (result.success) return res.status(200).json(result);
+    return res.status(400).json(result);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
