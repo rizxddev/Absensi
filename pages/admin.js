@@ -100,26 +100,29 @@ export default function Admin() {
   };
 
   const simpanAbsensi = async () => {
-    const hasil = siswa.map(s => ({
-      nama: s.nama,
-      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha",
-      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
-    }));
-    const dataExport = {
-      kelas,
-      wali_kelas: wali,
-      absensi: { [tanggal]: hasil }
-    };
-    const res = await fetch('/api/updateHasil', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dataExport)
-    });
-    const json = await res.json();
-    if (!json.success) {
-      alert('Gagal simpan absensi: ' + JSON.stringify(json.error || json));
-    }
+  const hasil = siswa.map(s => ({
+    nama: s.nama,
+    sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha",
+    shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
+  }));
+  const dataExport = {
+    kelas,
+    wali_kelas: wali,
+    absensi: { [tanggal]: hasil }
   };
+
+  const res = await fetch('/api/updateHasil', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dataExport)
+  });
+  const json = await res.json();
+  if (json.success) {
+    alert(json.message || 'Absensi berhasil disimpan!');
+  } else {
+    alert('Gagal simpan absensi: ' + JSON.stringify(json.error || json));
+  }
+};
 
   if (!loggedIn) {
     return (
