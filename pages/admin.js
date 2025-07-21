@@ -9,6 +9,17 @@ export default function Admin() {
   const [siswa, setSiswa] = useState([]);
   const [guruList, setGuruList] = useState([]);
 
+  // Fungsi ambil ulang data siswa
+  const fetchSiswa = async () => {
+    try {
+      const res = await fetch('/siswa.json');
+      const json = await res.json();
+      setSiswa(json.siswa || []);
+    } catch {
+      setSiswa([]);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('admin_ok');
     if (token) {
@@ -19,16 +30,13 @@ export default function Admin() {
         .then(json => setGuruList(json.guru || []))
         .catch(() => setGuruList([]));
 
-      // Ambil daftar siswa dari file
-      fetch('/siswa.json')
-        .then(r => r.json())
-        .then(json => setSiswa(json.siswa || []))
-        .catch(() => setSiswa([]));
+      // Ambil daftar siswa awal
+      fetchSiswa();
     }
   }, []);
 
   const login = () => {
-    const ADMIN_PASS = "1234"; // bisa ganti sesuai keinginan
+    const ADMIN_PASS = "1234"; // ganti sesuai kebutuhan
     if (password === ADMIN_PASS) {
       localStorage.setItem('admin_ok', 'true');
       setLoggedIn(true);
@@ -37,37 +45,38 @@ export default function Admin() {
     }
   };
 
-  // Simpan daftar siswa ke GitHub
+  // Simpan daftar siswa ke GitHub + refresh data
   const simpanSiswa = async (list) => {
-  const res = await fetch('/api/updateSiswa', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ siswa: list })
-  });
-  const json = await res.json();
-  if (json.success) {
-    alert(json.message || 'Daftar siswa berhasil disimpan!');
-  } else {
-    alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
-  }
-};
+    const res = await fetch('/api/updateSiswa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ siswa: list })
+    });
+    const json = await res.json();
+    if (json.success) {
+      alert(json.message || 'Daftar siswa berhasil disimpan!');
+      fetchSiswa(); // Refresh daftar siswa dari GitHub
+    } else {
+      alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
+    }
+  };
 
   const tambahSiswa = () => {
-  const nama = prompt('Nama siswa baru:');
-  if (nama) {
-    const updated = [...(siswa || []), { id: Date.now(), nama }];
-    setSiswa(updated);
-    simpanSiswa(updated);
-  }
-};
+    const nama = prompt('Nama siswa baru:');
+    if (nama) {
+      const updated = [...(siswa || []), { id: Date.now(), nama }];
+      setSiswa(updated);
+      simpanSiswa(updated);
+    }
+  };
 
   const hapusSiswa = (id) => {
-  if (confirm('Hapus siswa ini?')) {
-    const updated = (siswa || []).filter(s => s.id !== id);
-    setSiswa(updated);
-    simpanSiswa(updated);
-  }
-};
+    if (confirm('Hapus siswa ini?')) {
+      const updated = (siswa || []).filter(s => s.id !== id);
+      setSiswa(updated);
+      simpanSiswa(updated);
+    }
+  };
 
   const tambahGuru = () => {
     const username = prompt('Masukkan username guru:');
@@ -88,43 +97,43 @@ export default function Admin() {
   };
 
   const simpanGuru = async (list) => {
-  const res = await fetch('/api/updateGuru', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ guru: list })
-  });
-  const json = await res.json();
-  if (json.success) {
-    alert(json.message || 'Data guru berhasil disimpan!');
-  } else {
-    alert('Gagal simpan data guru: ' + JSON.stringify(json.error || json));
-  }
-};
-
-  const simpanAbsensi = async () => {
-  const hasil = siswa.map(s => ({
-    nama: s.nama,
-    sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha",
-    shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
-  }));
-  const dataExport = {
-    kelas,
-    wali_kelas: wali,
-    absensi: { [tanggal]: hasil }
+    const res = await fetch('/api/updateGuru', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guru: list })
+    });
+    const json = await res.json();
+    if (json.success) {
+      alert(json.message || 'Data guru berhasil disimpan!');
+    } else {
+      alert('Gagal simpan data guru: ' + JSON.stringify(json.error || json));
+    }
   };
 
-  const res = await fetch('/api/updateHasil', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(dataExport)
-  });
-  const json = await res.json();
-  if (json.success) {
-    alert(json.message || 'Absensi berhasil disimpan!');
-  } else {
-    alert('Gagal simpan absensi: ' + JSON.stringify(json.error || json));
-  }
-};
+  const simpanAbsensi = async () => {
+    const hasil = siswa.map(s => ({
+      nama: s.nama,
+      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha",
+      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
+    }));
+    const dataExport = {
+      kelas,
+      wali_kelas: wali,
+      absensi: { [tanggal]: hasil }
+    };
+
+    const res = await fetch('/api/updateHasil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataExport)
+    });
+    const json = await res.json();
+    if (json.success) {
+      alert(json.message || 'Absensi berhasil disimpan!');
+    } else {
+      alert('Gagal simpan absensi: ' + JSON.stringify(json.error || json));
+    }
+  };
 
   if (!loggedIn) {
     return (
