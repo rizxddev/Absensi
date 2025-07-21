@@ -1,7 +1,8 @@
-async function getFile(owner, repo, path, token) {
+async function getLatestSha(owner, repo, path, token) {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  return await res.json();
+  const data = await res.json();
+  return data.sha || null;
 }
 
 export default async function handler(req, res) {
@@ -13,42 +14,45 @@ export default async function handler(req, res) {
   const PATH = 'public/siswa.json';
 
   try {
-    // Ambil file lama dari GitHub (isi + sha)
-    const fileData = await getFile(OWNER, REPO, PATH, GITHUB_TOKEN);
-    const oldContent = fileData.content
-      ? JSON.parse(Buffer.from(fileData.content, 'base64').toString())
-      : { siswa: [] };
-    const sha = fileData.sha;
-
-    // Data baru dari request (bentuk { siswa: [...] })
-    const newData = req.body;
-
-    // Gabungkan data lama + baru, hapus duplikat berdasarkan id
-    const combined = {
-      siswa: [
-        ...oldContent.siswa.filter(s => !newData.siswa.some(n => n.id === s.id)),
-        ...newData.siswa
-      ]
-    };
-
-    const contentEncoded = Buffer.from(JSON.stringify(combined, null, 2)).toString('base64');
+    // Ambil SHA terbaru dulu
+    let sha = await getLatestSha(OWNER, REPO, PATH, GITHUB_TOKEN);
+    const contentEncoded = Buffer.from(JSON.stringify(req.body, null, 2)).toString('base64');
     const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
 
-    const save = await fetch(url, {
+    // Coba simpan pertama
+    let save = await fetch(url, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: 'Update siswa.json', content: contentEncoded, sha })
+      body: JSON.stringify({ message: 'Update data siswa', content: contentEncoded, sha })
     });
 
-    const result = await save.json();
-    if (save.status === 200 || save.status === 201) {
-      return res.status(200).json({ success: true, siswa: combined.siswa });
+    // Jika konflik (409), ambil SHA terbaru dan simpan ulang
+    if (save.status === 409) {
+      sha = await getLatestSha(OWNER, REPO, PATH, GITHUB_TOKEN);
+      save = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: 'Retry update data siswa', content: contentEncoded, sha })
+      });
     }
 
-    return res.status(save.status).json({ error: result });
+    const result = await save.json();
+
+    if (save.status === 200 || save.status === 201) {
+      return res.status(200).json({
+        success: true,
+        message: 'Data siswa berhasil disimpan!',
+        commitSha: result.commit?.sha
+      });
+    } else {
+      return res.status(save.status).json({ error: result });
+    }
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
