@@ -20,9 +20,14 @@ export default function Admin() {
   };
 
   const fetchSiswa = async () => {
-    const json = await fetchLatest('siswa.json');
+  try {
+    const res = await fetch(`/siswa.json?t=${Date.now()}`, { cache: 'no-store' });
+    const json = await res.json();
     setSiswa(json.siswa || []);
-  };
+  } catch {
+    setSiswa([]);
+  }
+};
 
   useEffect(() => {
     const token = localStorage.getItem('admin_ok');
@@ -48,40 +53,43 @@ export default function Admin() {
     }
   };
 
-  const simpanSiswa = async (list) => {
-    const res = await fetch('/api/updateSiswa', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ siswa: list })
-    });
-    const json = await res.json();
-    if (json.success) {
-      fetchSiswa(); // Refresh daftar siswa langsung
-    } else {
-      alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
-    }
-  };
+const simpanSiswa = async (list) => {
+  const res = await fetch('/api/updateSiswa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siswa: list })
+  });
+  const json = await res.json();
+  if (json.success) {
+    await fetchSiswa();  // Ambil data terbaru dari GitHub setelah sukses
+    alert('Daftar siswa berhasil disimpan!');
+  } else {
+    alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
+  }
+};
 
-  const tambahSiswa = async () => {
-    const nama = prompt('Nama siswa baru:');
-    if (!nama) return;
+const tambahSiswa = async () => {
+  const nama = prompt('Nama siswa baru:');
+  if (!nama) return;
 
-    const latest = await fetchLatest('siswa.json');
-    const current = latest.siswa || [];
-    const updated = [...current, { id: Date.now(), nama }];
-    setSiswa(updated);
-    simpanSiswa(updated);
-  };
+  const res = await fetch(`/siswa.json?t=${Date.now()}`, { cache: 'no-store' });
+  const json = await res.json();
+  const current = json.siswa || [];
 
-  const hapusSiswa = async (id) => {
-    if (!confirm('Hapus siswa ini?')) return;
+  const updated = [...current, { id: Date.now(), nama }];
+  await simpanSiswa(updated);  // Tidak langsung setState, biar data sync
+};
 
-    const latest = await fetchLatest('siswa.json');
-    const current = latest.siswa || [];
-    const updated = current.filter(s => s.id !== id);
-    setSiswa(updated);
-    simpanSiswa(updated);
-  };
+const hapusSiswa = async (id) => {
+  if (!confirm('Hapus siswa ini?')) return;
+
+  const res = await fetch(`/siswa.json?t=${Date.now()}`, { cache: 'no-store' });
+  const json = await res.json();
+  const current = json.siswa || [];
+
+  const updated = current.filter(s => s.id !== id);
+  await simpanSiswa(updated);  // Tidak langsung setState, biar sync
+};
 
   const tambahGuru = () => {
     const username = prompt('Masukkan username guru:');
