@@ -21,7 +21,7 @@ export default function Admin() {
 
   const fetchSiswa = async () => {
   try {
-    const res = await fetch(`/siswa.json?t=${Date.now()}`, { cache: 'no-store' });
+    const res = await fetch('/api/getSiswa', { cache: 'no-store' });
     const json = await res.json();
     setSiswa(json.siswa || []);
   } catch {
@@ -72,23 +72,17 @@ const tambahSiswa = async () => {
   const nama = prompt('Nama siswa baru:');
   if (!nama) return;
 
-  const res = await fetch(`/siswa.json?t=${Date.now()}`, { cache: 'no-store' });
-  const json = await res.json();
-  const current = json.siswa || [];
-
-  const updated = [...current, { id: Date.now(), nama }];
-  await simpanSiswa(updated);  // Tidak langsung setState, biar data sync
+  const updated = [...siswa, { id: Date.now(), nama }];
+  await simpanSiswa(updated);
+  fetchSiswa(); // refresh dari GitHub
 };
 
 const hapusSiswa = async (id) => {
   if (!confirm('Hapus siswa ini?')) return;
 
-  const res = await fetch(`/siswa.json?t=${Date.now()}`, { cache: 'no-store' });
-  const json = await res.json();
-  const current = json.siswa || [];
-
-  const updated = current.filter(s => s.id !== id);
-  await simpanSiswa(updated);  // Tidak langsung setState, biar sync
+  const updated = siswa.filter(s => s.id !== id);
+  await simpanSiswa(updated);
+  fetchSiswa(); // refresh dari GitHub
 };
 
   const tambahGuru = () => {
