@@ -9,21 +9,26 @@ export default function Admin() {
   const [siswa, setSiswa] = useState([]);
   const [guruList, setGuruList] = useState([]);
 
-  // Fungsi ambil ulang data siswa
-  const fetchSiswa = async () => {
+  // Fungsi ambil file JSON dari server
+  const fetchLatest = async (file) => {
     try {
-      const res = await fetch('/siswa.json');
-      const json = await res.json();
-      setSiswa(json.siswa || []);
+      const res = await fetch(`/${file}`);
+      return await res.json();
     } catch {
-      setSiswa([]);
+      return {};
     }
+  };
+
+  const fetchSiswa = async () => {
+    const json = await fetchLatest('siswa.json');
+    setSiswa(json.siswa || []);
   };
 
   useEffect(() => {
     const token = localStorage.getItem('admin_ok');
     if (token) {
       setLoggedIn(true);
+
       // Ambil data guru
       fetch('/guru.json')
         .then(r => r.json())
@@ -45,7 +50,6 @@ export default function Admin() {
     }
   };
 
-  // Simpan daftar siswa ke GitHub + refresh data
   const simpanSiswa = async (list) => {
     const res = await fetch('/api/updateSiswa', {
       method: 'POST',
@@ -54,53 +58,35 @@ export default function Admin() {
     });
     const json = await res.json();
     if (json.success) {
-      alert(json.message || 'Daftar siswa berhasil disimpan!');
-      fetchSiswa(); // Refresh daftar siswa dari GitHub
+      alert('Daftar siswa berhasil disimpan!');
+      fetchSiswa(); // Refresh tampilan
     } else {
       alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
     }
   };
 
   const tambahSiswa = async () => {
-  const nama = prompt('Nama siswa baru:');
-  if (!nama) return;
+    const nama = prompt('Nama siswa baru:');
+    if (!nama) return;
 
-  try {
-    // Ambil data terbaru dari GitHub dulu
-    const res = await fetch('/siswa.json');
-    const json = await res.json();
-    const current = json.siswa || [];
+    const latest = await fetchLatest('siswa.json');
+    const current = latest.siswa || [];
 
-    // Tambah siswa baru ke list lama
     const updated = [...current, { id: Date.now(), nama }];
     setSiswa(updated);
     simpanSiswa(updated);
-  } catch {
-    // Kalau gagal fetch, langsung pakai state lokal
-    const updated = [...(siswa || []), { id: Date.now(), nama }];
-    setSiswa(updated);
-    simpanSiswa(updated);
-  }
-};
+  };
 
   const hapusSiswa = async (id) => {
-  if (!confirm('Hapus siswa ini?')) return;
+    if (!confirm('Hapus siswa ini?')) return;
 
-  try {
-    const res = await fetch('/siswa.json');
-    const json = await res.json();
-    const current = json.siswa || [];
+    const latest = await fetchLatest('siswa.json');
+    const current = latest.siswa || [];
 
-    // Hapus berdasarkan ID
     const updated = current.filter(s => s.id !== id);
     setSiswa(updated);
     simpanSiswa(updated);
-  } catch {
-    const updated = (siswa || []).filter(s => s.id !== id);
-    setSiswa(updated);
-    simpanSiswa(updated);
-  }
-};
+  };
 
   const tambahGuru = () => {
     const username = prompt('Masukkan username guru:');
@@ -128,18 +114,22 @@ export default function Admin() {
     });
     const json = await res.json();
     if (json.success) {
-      alert(json.message || 'Data guru berhasil disimpan!');
+      alert('Data guru berhasil disimpan!');
     } else {
-      alert('Gagal simpan data guru: ' + JSON.stringify(json.error || json));
+      alert('Gagal simpan guru: ' + JSON.stringify(json.error || json));
     }
   };
 
   const simpanAbsensi = async () => {
-    const hasil = siswa.map(s => ({
+    const latest = await fetchLatest('siswa.json');
+    const siswaList = latest.siswa || siswa;
+
+    const hasil = siswaList.map(s => ({
       nama: s.nama,
       sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha",
       shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
     }));
+
     const dataExport = {
       kelas,
       wali_kelas: wali,
@@ -153,7 +143,7 @@ export default function Admin() {
     });
     const json = await res.json();
     if (json.success) {
-      alert(json.message || 'Absensi berhasil disimpan!');
+      alert('Absensi berhasil disimpan!');
     } else {
       alert('Gagal simpan absensi: ' + JSON.stringify(json.error || json));
     }
