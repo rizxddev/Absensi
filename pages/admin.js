@@ -46,7 +46,7 @@ export default function Admin() {
   });
   const json = await res.json();
   if (json.success) {
-    alert('Daftar siswa berhasil disimpan!');
+    alert(json.message || 'Daftar siswa berhasil disimpan!');
   } else {
     alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
   }
@@ -88,16 +88,18 @@ export default function Admin() {
   };
 
   const simpanGuru = async (list) => {
-    const res = await fetch('/api/updateGuru', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guru: list })
-    });
-    const json = await res.json();
-    if (!json.success) {
-      alert('Gagal simpan data guru: ' + JSON.stringify(json.error || json));
-    }
-  };
+  const res = await fetch('/api/updateGuru', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ guru: list })
+  });
+  const json = await res.json();
+  if (json.success) {
+    alert(json.message || 'Data guru berhasil disimpan!');
+  } else {
+    alert('Gagal simpan data guru: ' + JSON.stringify(json.error || json));
+  }
+};
 
   const simpanAbsensi = async () => {
   const hasil = siswa.map(s => ({
