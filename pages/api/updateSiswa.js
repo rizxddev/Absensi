@@ -13,17 +13,22 @@ export default async function handler(req, res) {
   const PATH = 'public/siswa.json';
 
   try {
-    // Ambil file lama (untuk sha + data)
+    // Ambil file lama dari GitHub (isi + sha)
     const fileData = await getFile(OWNER, REPO, PATH, GITHUB_TOKEN);
-    const oldContent = JSON.parse(Buffer.from(fileData.content, 'base64').toString()) || { siswa: [] };
+    const oldContent = fileData.content
+      ? JSON.parse(Buffer.from(fileData.content, 'base64').toString())
+      : { siswa: [] };
     const sha = fileData.sha;
 
-    // Data baru dari request
-    const newData = req.body; // { siswa: [...] }
+    // Data baru dari request (bentuk { siswa: [...] })
+    const newData = req.body;
 
-    // Gabung lama + baru (hindari duplikat ID)
+    // Gabungkan data lama + baru, hapus duplikat berdasarkan id
     const combined = {
-      siswa: [...oldContent.siswa.filter(s => !newData.siswa.find(n => n.id === s.id)), ...newData.siswa]
+      siswa: [
+        ...oldContent.siswa.filter(s => !newData.siswa.some(n => n.id === s.id)),
+        ...newData.siswa
+      ]
     };
 
     const contentEncoded = Buffer.from(JSON.stringify(combined, null, 2)).toString('base64');
