@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const data = await resp.json();
 
     if (!data.content) {
-      return res.status(404).json({ siswa: [] });
+      return res.status(200).json({ siswa: [] });
     }
 
     const decoded = JSON.parse(Buffer.from(data.content, 'base64').toString());
