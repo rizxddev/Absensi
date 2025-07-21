@@ -1,11 +1,11 @@
 {
   "kelas": "XI C",
-  "wali_kelas": "Gun Gun Nugraha",
+  "wali_kelas": "Gungun Nugraha",
   "absensi": {
     "2025-07-21": [
       {
         "nama": "CANDRA AHMAD SETIAWAN",
-        "sekolah": "Alpha",
+        "sekolah": "Hadir",
         "shalat": "Ya"
       },
       {
@@ -15,12 +15,12 @@
       },
       {
         "nama": "DENIS SUTRISNO",
-        "sekolah": "Alpha",
+        "sekolah": "Hadir",
         "shalat": "Ya"
       },
       {
         "nama": "EKA SYAHRIL GUSTIAN",
-        "sekolah": "Alpha",
+        "sekolah": "Izin",
         "shalat": "Ya"
       },
       {
@@ -35,7 +35,7 @@
       },
       {
         "nama": "JENAL ABIDIN ABDUL ROJAK",
-        "sekolah": "Sakit",
+        "sekolah": "Hadir",
         "shalat": "Ya"
       },
       {
@@ -45,7 +45,7 @@
       },
       {
         "nama": "RIZKY HERDIANSYAH",
-        "sekolah": "Alpha",
+        "sekolah": "Hadir",
         "shalat": "Ya"
       }
     ]
