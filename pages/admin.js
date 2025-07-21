@@ -61,22 +61,46 @@ export default function Admin() {
     }
   };
 
-  const tambahSiswa = () => {
-    const nama = prompt('Nama siswa baru:');
-    if (nama) {
-      const updated = [...(siswa || []), { id: Date.now(), nama }];
-      setSiswa(updated);
-      simpanSiswa(updated);
-    }
-  };
+  const tambahSiswa = async () => {
+  const nama = prompt('Nama siswa baru:');
+  if (!nama) return;
 
-  const hapusSiswa = (id) => {
-    if (confirm('Hapus siswa ini?')) {
-      const updated = (siswa || []).filter(s => s.id !== id);
-      setSiswa(updated);
-      simpanSiswa(updated);
-    }
-  };
+  try {
+    // Ambil data terbaru dari GitHub dulu
+    const res = await fetch('/siswa.json');
+    const json = await res.json();
+    const current = json.siswa || [];
+
+    // Tambah siswa baru ke list lama
+    const updated = [...current, { id: Date.now(), nama }];
+    setSiswa(updated);
+    simpanSiswa(updated);
+  } catch {
+    // Kalau gagal fetch, langsung pakai state lokal
+    const updated = [...(siswa || []), { id: Date.now(), nama }];
+    setSiswa(updated);
+    simpanSiswa(updated);
+  }
+};
+
+  const hapusSiswa = async (id) => {
+  if (!confirm('Hapus siswa ini?')) return;
+
+  try {
+    const res = await fetch('/siswa.json');
+    const json = await res.json();
+    const current = json.siswa || [];
+
+    // Hapus berdasarkan ID
+    const updated = current.filter(s => s.id !== id);
+    setSiswa(updated);
+    simpanSiswa(updated);
+  } catch {
+    const updated = (siswa || []).filter(s => s.id !== id);
+    setSiswa(updated);
+    simpanSiswa(updated);
+  }
+};
 
   const tambahGuru = () => {
     const username = prompt('Masukkan username guru:');
