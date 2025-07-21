@@ -1,39 +1,7 @@
-async function getLatestSha(owner, repo, path, token) {
+async function getFile(owner, repo, path, token) {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  const data = await res.json();
-  return data.sha || null;
-}
-
-async function commitToGitHub({ owner, repo, path, token, content, message }) {
-  let sha = await getLatestSha(owner, repo, path, token);
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-  const encoded = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
-
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message, content: encoded, sha })
-    });
-
-    if (res.status === 200 || res.status === 201) {
-      const result = await res.json();
-      return { success: true, message: 'Daftar siswa berhasil disimpan!', commitSha: result.commit?.sha };
-    }
-
-    if (res.status === 409 && attempt < 3) {
-      await new Promise(r => setTimeout(r, 500));
-      sha = await getLatestSha(owner, repo, path, token);
-      continue;
-    }
-
-    const error = await res.json();
-    return { success: false, error };
-  }
+  return await res.json();
 }
 
 export default async function handler(req, res) {
@@ -45,17 +13,37 @@ export default async function handler(req, res) {
   const PATH = 'public/siswa.json';
 
   try {
-    const result = await commitToGitHub({
-      owner: OWNER,
-      repo: REPO,
-      path: PATH,
-      token: GITHUB_TOKEN,
-      content: req.body,
-      message: 'Update daftar siswa'
+    // Ambil file lama (untuk sha + data)
+    const fileData = await getFile(OWNER, REPO, PATH, GITHUB_TOKEN);
+    const oldContent = JSON.parse(Buffer.from(fileData.content, 'base64').toString()) || { siswa: [] };
+    const sha = fileData.sha;
+
+    // Data baru dari request
+    const newData = req.body; // { siswa: [...] }
+
+    // Gabung lama + baru (hindari duplikat ID)
+    const combined = {
+      siswa: [...oldContent.siswa.filter(s => !newData.siswa.find(n => n.id === s.id)), ...newData.siswa]
+    };
+
+    const contentEncoded = Buffer.from(JSON.stringify(combined, null, 2)).toString('base64');
+    const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
+
+    const save = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: 'Update siswa.json', content: contentEncoded, sha })
     });
 
-    if (result.success) return res.status(200).json(result);
-    return res.status(400).json(result);
+    const result = await save.json();
+    if (save.status === 200 || save.status === 201) {
+      return res.status(200).json({ success: true, siswa: combined.siswa });
+    }
+
+    return res.status(save.status).json({ error: result });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
