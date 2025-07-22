@@ -7,19 +7,30 @@ export default function Admin() {
   const [wali, setWali] = useState("Gungun Nugraha");
   const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 10));
 
+  // Pisah state untuk sekolah & shalat
   const [siswaSekolah, setSiswaSekolah] = useState([]);
   const [siswaShalat, setSiswaShalat] = useState([]);
   const [guruList, setGuruList] = useState([]);
 
-  const fetchSiswa = async (target) => {
+  // Fetch siswa sekolah
+  const fetchSiswaSekolah = async () => {
     try {
       const res = await fetch('/api/getSiswa', { cache: 'no-store' });
       const json = await res.json();
-      if (target === 'sekolah') setSiswaSekolah(json.siswa || []);
-      if (target === 'shalat') setSiswaShalat(json.siswa || []);
+      setSiswaSekolah(json.siswa || []);
     } catch {
-      if (target === 'sekolah') setSiswaSekolah([]);
-      if (target === 'shalat') setSiswaShalat([]);
+      setSiswaSekolah([]);
+    }
+  };
+
+  // Fetch siswa shalat
+  const fetchSiswaShalat = async () => {
+    try {
+      const res = await fetch('/api/getSiswa2', { cache: 'no-store' });
+      const json = await res.json();
+      setSiswaShalat(json.siswa || []);
+    } catch {
+      setSiswaShalat([]);
     }
   };
 
@@ -27,12 +38,16 @@ export default function Admin() {
     const token = localStorage.getItem('admin_ok');
     if (token) {
       setLoggedIn(true);
+
+      // Guru
       fetch('/guru.json', { cache: 'no-store' })
         .then(r => r.json())
         .then(json => setGuruList(json.guru || []))
         .catch(() => setGuruList([]));
-      fetchSiswa('sekolah');
-      fetchSiswa('shalat');
+
+      // Ambil data siswa
+      fetchSiswaSekolah();
+      fetchSiswaShalat();
     }
   }, []);
 
@@ -45,103 +60,94 @@ export default function Admin() {
     }
   };
 
-  const simpanSiswa = async (list, target) => {
+  // Simpan siswa sekolah
+  const simpanSiswaSekolah = async (list) => {
     const res = await fetch('/api/updateSiswa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ siswa: list })
     });
     const json = await res.json();
-    if (json.success) {
-      fetchSiswa(target);
-    } else {
-      alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
-    }
+    if (json.success) fetchSiswaSekolah();
+    else alert('Gagal simpan siswa sekolah: ' + JSON.stringify(json.error || json));
   };
 
-  const tambahSiswa = (target) => {
-    const nama = prompt(`Nama siswa baru untuk absen ${target}:`);
-    if (!nama) return;
-    const updated = (target === 'sekolah' ? siswaSekolah : siswaShalat).concat({ id: Date.now(), nama });
-    if (target === 'sekolah') setSiswaSekolah(updated);
-    else setSiswaShalat(updated);
-    simpanSiswa(updated, target);
-  };
-
-  const hapusSiswa = (id, target) => {
-    if (!confirm('Hapus siswa ini?')) return;
-    const updated = (target === 'sekolah' ? siswaSekolah : siswaShalat).filter(s => s.id !== id);
-    if (target === 'sekolah') setSiswaSekolah(updated);
-    else setSiswaShalat(updated);
-    simpanSiswa(updated, target);
-  };
-
-  const simpanAbsensi = async (target) => {
-    const siswaList = target === 'sekolah' ? siswaSekolah : siswaShalat;
-
-    const hasil = siswaList.map(s => ({
-      nama: s.nama,
-      value: document.querySelector(`input[name="${target}_${s.id}"]:checked`)?.value || (target === 'sekolah' ? "Alpha" : "Tidak")
-    }));
-
-    const dataExport = {
-      kelas,
-      wali_kelas: wali,
-      absensi: { [tanggal]: hasil }
-    };
-
-    const apiUrl = target === 'sekolah' ? '/api/updateHasil2' : '/api/updateHasil';
-
-    const res = await fetch(apiUrl, {
+  // Simpan siswa shalat
+  const simpanSiswaShalat = async (list) => {
+    const res = await fetch('/api/updateSiswa2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dataExport)
+      body: JSON.stringify({ siswa: list })
     });
     const json = await res.json();
-    if (!json.success) {
-      alert(`Gagal simpan absensi ${target}: ` + JSON.stringify(json.error || json));
-    } else {
-      alert(`Absensi ${target} berhasil disimpan!`);
-    }
+    if (json.success) fetchSiswaShalat();
+    else alert('Gagal simpan siswa shalat: ' + JSON.stringify(json.error || json));
   };
 
-  const tambahGuru = () => {
-    const username = prompt('Masukkan username guru:');
-    const pass = prompt('Masukkan password guru:');
-    if (username && pass) {
-      const updated = [...guruList, { username, password: pass }];
-      setGuruList(updated);
-      fetch('/api/updateGuru', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guru: updated })
-      });
-    }
+  const tambahSiswaSekolah = async () => {
+    const nama = prompt('Nama siswa baru (Sekolah):');
+    if (!nama) return;
+    await simpanSiswaSekolah([...siswaSekolah, { id: Date.now(), nama }]);
   };
 
-  const hapusGuru = (username) => {
-    if (!confirm(`Hapus guru ${username}?`)) return;
-    const updated = guruList.filter(g => g.username !== username);
-    setGuruList(updated);
-    fetch('/api/updateGuru', {
+  const tambahSiswaShalat = async () => {
+    const nama = prompt('Nama siswa baru (Shalat):');
+    if (!nama) return;
+    await simpanSiswaShalat([...siswaShalat, { id: Date.now(), nama }]);
+  };
+
+  const hapusSiswaSekolah = async (id) => {
+    if (!confirm('Hapus siswa ini dari absensi sekolah?')) return;
+    await simpanSiswaSekolah(siswaSekolah.filter(s => s.id !== id));
+  };
+
+  const hapusSiswaShalat = async (id) => {
+    if (!confirm('Hapus siswa ini dari absensi shalat?')) return;
+    await simpanSiswaShalat(siswaShalat.filter(s => s.id !== id));
+  };
+
+  // Simpan absensi sekolah (hasil2.json)
+  const simpanAbsensiSekolah = async () => {
+    const hasil = siswaSekolah.map(s => ({
+      nama: s.nama,
+      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
+    }));
+    const res = await fetch('/api/updateHasil2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guru: updated })
+      body: JSON.stringify({ kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } })
     });
+    const json = await res.json();
+    if (!json.success) alert('Gagal simpan absensi sekolah: ' + JSON.stringify(json.error || json));
+  };
+
+  // Simpan absensi shalat (hasil.json)
+  const simpanAbsensiShalat = async () => {
+    const hasil = siswaShalat.map(s => ({
+      nama: s.nama,
+      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
+    }));
+    const res = await fetch('/api/updateHasil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } })
+    });
+    const json = await res.json();
+    if (!json.success) alert('Gagal simpan absensi shalat: ' + JSON.stringify(json.error || json));
   };
 
   if (!loggedIn) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen space-y-4 text-white bg-gradient-to-br from-gray-900 to-indigo-900">
+      <div className="flex flex-col items-center justify-center h-screen space-y-4">
         <h2 className="text-xl font-bold">Login Admin</h2>
         <input
           type="password"
-          className="border px-3 py-2 rounded bg-gray-800 text-white"
+          className="border px-3 py-2"
           placeholder="Password"
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
-        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onClick={login}>
+        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={login}>
           Login
         </button>
       </div>
@@ -149,91 +155,67 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <h2 className="text-3xl font-bold text-indigo-200 mb-4">Panel Admin Absensi</h2>
-        <div className="flex flex-wrap gap-4 mb-6">
-          <label className="flex flex-col">Tanggal: <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} className="bg-gray-800 text-white rounded px-3 py-1" /></label>
-          <label className="flex flex-col">Kelas: <input value={kelas} onChange={e => setKelas(e.target.value)} className="bg-gray-800 text-white rounded px-3 py-1" /></label>
-          <label className="flex flex-col">Wali Kelas: <input value={wali} onChange={e => setWali(e.target.value)} className="bg-gray-800 text-white rounded px-3 py-1" /></label>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <h2 className="text-3xl font-bold mb-4">Panel Admin Absensi</h2>
+
+        <div className="flex space-x-4 mb-6">
+          <label>Tanggal: <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} className="text-black" /></label>
+          <label>Kelas: <input className="border text-black" value={kelas} onChange={e => setKelas(e.target.value)} /></label>
+          <label>Wali Kelas: <input className="border text-black" value={wali} onChange={e => setWali(e.target.value)} /></label>
         </div>
 
-        {/* Absensi Sekolah */}
-        <div className="bg-gray-900/80 rounded-xl p-4 border border-indigo-500 shadow-lg">
-          <h3 className="text-xl font-bold text-indigo-300 mb-3">Absensi Sekolah</h3>
-          <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white mb-4" onClick={() => tambahSiswa('sekolah')}>Tambah Siswa Sekolah</button>
-          <table className="table-auto w-full border border-gray-700 rounded">
+        {/* Tabel Absensi Sekolah */}
+        <div className="bg-gray-800 p-4 rounded-xl">
+          <h3 className="text-xl font-bold mb-3">Absensi Sekolah</h3>
+          <button className="bg-green-500 px-4 py-2 rounded mb-3" onClick={tambahSiswaSekolah}>Tambah Siswa Sekolah</button>
+          <table className="table-auto w-full text-white">
             <thead>
-              <tr className="bg-indigo-700">
-                <th>No</th><th>Nama</th>
-                <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Dispen</th>
-                <th>Aksi</th>
+              <tr className="bg-indigo-600">
+                <th>No</th><th>Nama</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Dispen</th><th>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {siswaSekolah.map((s, i) => (
-                <tr key={s.id} className="border-t border-gray-600">
+                <tr key={s.id}>
                   <td>{i + 1}</td>
                   <td>{s.nama}</td>
-                  {['Hadir','Izin','Sakit','Alpha','Dispen'].map(v => (
-                    <td key={v}><input type="radio" name={`sekolah_${s.id}`} value={v} defaultChecked={v==='Hadir'} /></td>
+                  {['Hadir','Izin','Sakit','Alpha','Dispen'].map(opt => (
+                    <td key={opt}><input type="radio" name={`sekolah_${s.id}`} value={opt} defaultChecked={opt === 'Hadir'} /></td>
                   ))}
-                  <td><button className="bg-red-600 px-3 py-1 rounded" onClick={() => hapusSiswa(s.id,'sekolah')}>Hapus</button></td>
+                  <td><button className="bg-red-500 px-3 py-1 rounded" onClick={() => hapusSiswaSekolah(s.id)}>Hapus</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button className="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded" onClick={() => simpanAbsensi('sekolah')}>Simpan Absensi Sekolah</button>
+          <button className="bg-blue-500 px-4 py-2 rounded mt-4" onClick={simpanAbsensiSekolah}>Simpan Absensi Sekolah</button>
         </div>
 
-        {/* Absensi Shalat */}
-        <div className="bg-gray-900/80 rounded-xl p-4 border border-purple-500 shadow-lg">
-          <h3 className="text-xl font-bold text-purple-300 mb-3">Absensi Shalat</h3>
-          <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white mb-4" onClick={() => tambahSiswa('shalat')}>Tambah Siswa Shalat</button>
-          <table className="table-auto w-full border border-gray-700 rounded">
+        {/* Tabel Absensi Shalat */}
+        <div className="bg-gray-800 p-4 rounded-xl">
+          <h3 className="text-xl font-bold mb-3">Absensi Shalat</h3>
+          <button className="bg-green-500 px-4 py-2 rounded mb-3" onClick={tambahSiswaShalat}>Tambah Siswa Shalat</button>
+          <table className="table-auto w-full text-white">
             <thead>
-              <tr className="bg-purple-700">
-                <th>No</th><th>Nama</th>
-                <th>Ya</th><th>Tidak</th>
-                <th>Aksi</th>
+              <tr className="bg-indigo-600">
+                <th>No</th><th>Nama</th><th>Ya</th><th>Tidak</th><th>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {siswaShalat.map((s, i) => (
-                <tr key={s.id} className="border-t border-gray-600">
+                <tr key={s.id}>
                   <td>{i + 1}</td>
                   <td>{s.nama}</td>
-                  {['Ya','Tidak'].map(v => (
-                    <td key={v}><input type="radio" name={`shalat_${s.id}`} value={v} defaultChecked={v==='Ya'} /></td>
-                  ))}
-                  <td><button className="bg-red-600 px-3 py-1 rounded" onClick={() => hapusSiswa(s.id,'shalat')}>Hapus</button></td>
+                  <td><input type="radio" name={`shalat_${s.id}`} value="Ya" defaultChecked /></td>
+                  <td><input type="radio" name={`shalat_${s.id}`} value="Tidak" /></td>
+                  <td><button className="bg-red-500 px-3 py-1 rounded" onClick={() => hapusSiswaShalat(s.id)}>Hapus</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button className="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded" onClick={() => simpanAbsensi('shalat')}>Simpan Absensi Shalat</button>
-        </div>
-
-        {/* Manajemen Guru */}
-        <div className="bg-gray-900/70 rounded-xl p-4 border border-pink-500 shadow-md mt-8">
-          <h3 className="text-xl font-bold text-pink-300 mb-3">Manajemen Guru</h3>
-          <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white mb-4" onClick={tambahGuru}>Tambah Guru</button>
-          <table className="table-auto w-full border border-gray-700 rounded">
-            <thead className="bg-pink-700">
-              <tr><th>Username</th><th>Password</th><th>Aksi</th></tr>
-            </thead>
-            <tbody>
-              {guruList.map((g, i) => (
-                <tr key={i} className="border-t border-gray-600">
-                  <td>{g.username}</td>
-                  <td>{g.password}</td>
-                  <td><button className="bg-red-600 px-3 py-1 rounded" onClick={() => hapusGuru(g.username)}>Hapus</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <button className="bg-blue-500 px-4 py-2 rounded mt-4" onClick={simpanAbsensiShalat}>Simpan Absensi Shalat</button>
         </div>
       </div>
     </div>
   );
-    }
+                                                                               }
