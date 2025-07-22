@@ -4,25 +4,21 @@ import { useRouter } from 'next/router';
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const [role, setRole] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [guruList, setGuruList] = useState([]);
   const router = useRouter();
 
-  useEffect(() => {
-    fetch('/guru.json')
-      .then(r => r.json())
-      .then(json => setGuruList(json.guru || []));
-  }, []);
-
   const openModal = (roleType) => {
-    setRole(roleType);
-    setShowModal(true);
+    if (roleType === 'guru') {
+      // Guru langsung lihat absensi tanpa login
+      router.push('/guru');
+    } else {
+      setRole(roleType);
+      setShowModal(true);
+    }
   };
 
   const closeModal = () => {
     setShowModal(false);
-    setUsername('');
     setPassword('');
   };
 
@@ -34,16 +30,8 @@ export default function Home() {
       } else {
         alert('Password admin salah!');
       }
-    } else if (role === 'guru') {
-      const found = guruList.find(g => g.username === username && g.password === password);
-      if (found) {
-        localStorage.setItem('guru_login', username);
-        router.push('/guru');
-      } else {
-        alert('Username atau password guru salah!');
-      }
+      closeModal();
     }
-    closeModal();
   };
 
   return (
@@ -54,14 +42,14 @@ export default function Home() {
           Sistem Absensi Sekolah
         </h1>
         <p className="text-gray-300 mb-6">
-          Pilih untuk login sebagai Admin atau Guru.
+          Pilih untuk melihat absensi siswa atau login sebagai Admin.
         </p>
         <div className="space-y-4">
           <button
             onClick={() => openModal('guru')}
             className="w-full py-3 text-lg rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-600 hover:to-blue-600 shadow-lg hover:shadow-blue-500/50 transition-all duration-300"
           >
-            Login Guru
+            Lihat Absensi
           </button>
           <button
             onClick={() => openModal('admin')}
@@ -75,32 +63,20 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Modal Login */}
+      {/* Modal Login Admin */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 animate-fadeIn">
           <div className="bg-gray-900 border border-indigo-400/50 p-6 rounded-2xl shadow-2xl w-80 animate-slideUp">
             <h2 className="text-xl font-bold text-center text-indigo-200 mb-4">
-              {role === 'admin' ? '🔒 Login Admin' : '👩‍🏫 Login Guru'}
+              🔒 Login Admin
             </h2>
-
-            {/* Username hanya untuk Guru */}
-            {role === 'guru' && (
-              <input
-                type="text"
-                placeholder="Username Guru"
-                className="w-full border border-indigo-400 rounded-lg px-3 py-2 mb-3 bg-gray-800 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-              />
-            )}
             <input
               type="password"
-              placeholder={role === 'admin' ? 'Password Admin' : 'Password Guru'}
+              placeholder="Password Admin"
               className="w-full border border-indigo-400 rounded-lg px-3 py-2 mb-4 bg-gray-800 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
-
             <div className="flex gap-2">
               <button
                 onClick={closeModal}
@@ -138,4 +114,4 @@ export default function Home() {
       `}</style>
     </div>
   );
-      }
+}
