@@ -10,13 +10,7 @@ export default function Guru() {
   const [salinText, setSalinText] = useState('');
   const [guruLogin, setGuruLogin] = useState('');
 
-  useEffect(() => {
-    const user = localStorage.getItem('guru_login');
-    if (!user) {
-      window.location.href = '/'; // kalau belum login
-    } else {
-      setGuruLogin(user);
-    }
+  
 
     // Fetch hasil sekolah
     fetch('/hasil2.json', { cache: 'no-store' })
@@ -69,7 +63,7 @@ export default function Guru() {
   };
 
   const logoutGuru = () => {
-    localStorage.removeItem('guru_login');
+   
     window.location.href = '/';
   };
 
@@ -81,12 +75,12 @@ export default function Guru() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
       <div className="max-w-5xl mx-auto bg-gray-900/80 p-6 rounded-2xl shadow-2xl border border-indigo-400/50">
         <div className="flex justify-between items-center mb-6">
-          <p className="text-sm text-gray-300">Login sebagai: <b>{guruLogin}</b></p>
+          <p className="text-sm text-gray-300">Halo Selamat Datang <b></b></p>
           <button
             onClick={logoutGuru}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg text-sm"
           >
-            Logout
+            Keluar
           </button>
         </div>
 
