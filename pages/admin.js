@@ -90,7 +90,7 @@ export default function Admin() {
     await simpanSiswaSekolah(updated);
   };
 
-  // Tambah & hapus siswa shalat
+  // Tambah & hapus siswa shalat 
   const tambahSiswaShalat = async () => {
     const nama = prompt('Nama siswa baru (Shalat):');
     if (!nama) return;
