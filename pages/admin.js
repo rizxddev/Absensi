@@ -6,26 +6,20 @@ export default function Admin() {
   const [kelas, setKelas] = useState("XI C");
   const [wali, setWali] = useState("Gungun Nugraha");
   const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 10));
-  const [siswa, setSiswa] = useState([]);
+
+  const [siswaSekolah, setSiswaSekolah] = useState([]);
+  const [siswaShalat, setSiswaShalat] = useState([]);
   const [guruList, setGuruList] = useState([]);
 
-  const fetchSiswa = async () => {
+  const fetchSiswa = async (target) => {
     try {
       const res = await fetch('/api/getSiswa', { cache: 'no-store' });
       const json = await res.json();
-      setSiswa(json.siswa || []);
+      if (target === 'sekolah') setSiswaSekolah(json.siswa || []);
+      if (target === 'shalat') setSiswaShalat(json.siswa || []);
     } catch {
-      setSiswa([]);
-    }
-  };
-
-  const fetchGuru = async () => {
-    try {
-      const res = await fetch('/guru.json', { cache: 'no-store' });
-      const json = await res.json();
-      setGuruList(json.guru || []);
-    } catch {
-      setGuruList([]);
+      if (target === 'sekolah') setSiswaSekolah([]);
+      if (target === 'shalat') setSiswaShalat([]);
     }
   };
 
@@ -33,14 +27,17 @@ export default function Admin() {
     const token = localStorage.getItem('admin_ok');
     if (token) {
       setLoggedIn(true);
-      fetchSiswa();
-      fetchGuru();
+      fetch('/guru.json', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(json => setGuruList(json.guru || []))
+        .catch(() => setGuruList([]));
+      fetchSiswa('sekolah');
+      fetchSiswa('shalat');
     }
   }, []);
 
   const login = () => {
-    const ADMIN_PASS = "1234";
-    if (password === ADMIN_PASS) {
+    if (password === "1234") {
       localStorage.setItem('admin_ok', 'true');
       setLoggedIn(true);
     } else {
@@ -48,87 +45,103 @@ export default function Admin() {
     }
   };
 
-  const simpanSiswa = async (list) => {
+  const simpanSiswa = async (list, target) => {
     const res = await fetch('/api/updateSiswa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ siswa: list })
     });
     const json = await res.json();
-    if (json.success) fetchSiswa();
-    else alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
+    if (json.success) {
+      fetchSiswa(target);
+    } else {
+      alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
+    }
   };
 
-  const tambahSiswa = async () => {
-    const nama = prompt('Nama siswa baru:');
+  const tambahSiswa = (target) => {
+    const nama = prompt(`Nama siswa baru untuk absen ${target}:`);
     if (!nama) return;
-    await simpanSiswa([...siswa, { id: Date.now(), nama }]);
+    const updated = (target === 'sekolah' ? siswaSekolah : siswaShalat).concat({ id: Date.now(), nama });
+    if (target === 'sekolah') setSiswaSekolah(updated);
+    else setSiswaShalat(updated);
+    simpanSiswa(updated, target);
   };
 
-  const hapusSiswa = async (id) => {
+  const hapusSiswa = (id, target) => {
     if (!confirm('Hapus siswa ini?')) return;
-    await simpanSiswa(siswa.filter(s => s.id !== id));
+    const updated = (target === 'sekolah' ? siswaSekolah : siswaShalat).filter(s => s.id !== id);
+    if (target === 'sekolah') setSiswaSekolah(updated);
+    else setSiswaShalat(updated);
+    simpanSiswa(updated, target);
   };
 
-  const simpanGuru = async (list) => {
-    const res = await fetch('/api/updateGuru', {
+  const simpanAbsensi = async (target) => {
+    const siswaList = target === 'sekolah' ? siswaSekolah : siswaShalat;
+
+    const hasil = siswaList.map(s => ({
+      nama: s.nama,
+      value: document.querySelector(`input[name="${target}_${s.id}"]:checked`)?.value || (target === 'sekolah' ? "Alpha" : "Tidak")
+    }));
+
+    const dataExport = {
+      kelas,
+      wali_kelas: wali,
+      absensi: { [tanggal]: hasil }
+    };
+
+    const apiUrl = target === 'sekolah' ? '/api/updateHasil2' : '/api/updateHasil';
+
+    const res = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guru: list })
+      body: JSON.stringify(dataExport)
     });
     const json = await res.json();
-    if (json.success) fetchGuru();
-    else alert('Gagal simpan guru: ' + JSON.stringify(json.error || json));
+    if (!json.success) {
+      alert(`Gagal simpan absensi ${target}: ` + JSON.stringify(json.error || json));
+    } else {
+      alert(`Absensi ${target} berhasil disimpan!`);
+    }
   };
 
   const tambahGuru = () => {
     const username = prompt('Masukkan username guru:');
     const pass = prompt('Masukkan password guru:');
-    if (username && pass) simpanGuru([...guruList, { username, password: pass }]);
-  };
-
-  const hapusGuru = (username) => {
-    if (confirm(`Hapus guru ${username}?`)) {
-      simpanGuru(guruList.filter(g => g.username !== username));
+    if (username && pass) {
+      const updated = [...guruList, { username, password: pass }];
+      setGuruList(updated);
+      fetch('/api/updateGuru', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guru: updated })
+      });
     }
   };
 
-  const simpanAbsensi = async () => {
-    const hasilShalat = siswa.map(s => ({
-      nama: s.nama,
-      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
-    }));
-
-    const hasilSekolah = siswa.map(s => ({
-      nama: s.nama,
-      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
-    }));
-
-    const dataExportShalat = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasilShalat } };
-    const dataExportSekolah = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasilSekolah } };
-
-    const res1 = await fetch('/api/updateHasil', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dataExportShalat)
+  const hapusGuru = (username) => {
+    if (!confirm(`Hapus guru ${username}?`)) return;
+    const updated = guruList.filter(g => g.username !== username);
+    setGuruList(updated);
+    fetch('/api/updateGuru', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guru: updated })
     });
-    const json1 = await res1.json();
-    if (!json1.success) alert('Gagal simpan absensi shalat: ' + JSON.stringify(json1.error || json1));
-
-    const res2 = await fetch('/api/updateHasil2', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dataExportSekolah)
-    });
-    const json2 = await res2.json();
-    if (!json2.success) alert('Gagal simpan absensi sekolah: ' + JSON.stringify(json2.error || json2));
   };
 
   if (!loggedIn) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white space-y-4">
-        <h2 className="text-2xl font-bold">Login Admin</h2>
-        <input type="password" className="border px-3 py-2 text-black rounded" placeholder="Password"
-          value={password} onChange={e => setPassword(e.target.value)} />
-        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg" onClick={login}>
+      <div className="flex flex-col items-center justify-center h-screen space-y-4 text-white bg-gradient-to-br from-gray-900 to-indigo-900">
+        <h2 className="text-xl font-bold">Login Admin</h2>
+        <input
+          type="password"
+          className="border px-3 py-2 rounded bg-gray-800 text-white"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
+        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onClick={login}>
           Login
         </button>
       </div>
@@ -136,91 +149,85 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
-      <div className="max-w-6xl mx-auto bg-gray-900/80 p-6 rounded-2xl shadow-2xl border border-indigo-400/50">
-        <h2 className="text-3xl font-bold mb-6 text-indigo-300">Panel Admin Absensi</h2>
-
-        {/* Form tanggal, kelas, wali */}
+    <div className="min-h-screen p-6 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <h2 className="text-3xl font-bold text-indigo-200 mb-4">Panel Admin Absensi</h2>
         <div className="flex flex-wrap gap-4 mb-6">
-          <label className="flex items-center gap-2">Tanggal:
-            <input type="date" className="text-black rounded px-2" value={tanggal} onChange={e => setTanggal(e.target.value)} />
-          </label>
-          <label className="flex items-center gap-2">Kelas:
-            <input className="text-black rounded px-2" value={kelas} onChange={e => setKelas(e.target.value)} />
-          </label>
-          <label className="flex items-center gap-2">Wali Kelas:
-            <input className="text-black rounded px-2" value={wali} onChange={e => setWali(e.target.value)} />
-          </label>
+          <label className="flex flex-col">Tanggal: <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} className="bg-gray-800 text-white rounded px-3 py-1" /></label>
+          <label className="flex flex-col">Kelas: <input value={kelas} onChange={e => setKelas(e.target.value)} className="bg-gray-800 text-white rounded px-3 py-1" /></label>
+          <label className="flex flex-col">Wali Kelas: <input value={wali} onChange={e => setWali(e.target.value)} className="bg-gray-800 text-white rounded px-3 py-1" /></label>
         </div>
 
-        {/* Tabel siswa */}
-        <button className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-lg mb-4 shadow" onClick={tambahSiswa}>
-          Tambah Siswa
-        </button>
-        <table className="table-auto w-full text-left border border-gray-700 rounded-lg overflow-hidden mb-8">
-          <thead>
-            <tr className="bg-indigo-700 text-white">
-              <th className="px-4 py-2">No</th><th className="px-4 py-2">Nama</th>
-              <th className="px-4 py-2" colSpan={5}>Absen Sekolah</th>
-              <th className="px-4 py-2" colSpan={2}>Absen Shalat</th>
-              <th className="px-4 py-2">Aksi</th>
-            </tr>
-            <tr className="bg-indigo-600 text-white text-sm">
-              <th></th><th></th>
-              <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Dispen</th>
-              <th>Ya</th><th>Tidak</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {siswa.map((s, i) => (
-              <tr key={s.id} className="border-t border-gray-700 hover:bg-gray-800 transition">
-                <td className="px-4 py-2">{i + 1}</td>
-                <td className="px-4 py-2">{s.nama}</td>
-                <td><input type="radio" name={`sekolah_${s.id}`} value="Hadir" defaultChecked /></td>
-                <td><input type="radio" name={`sekolah_${s.id}`} value="Izin" /></td>
-                <td><input type="radio" name={`sekolah_${s.id}`} value="Sakit" /></td>
-                <td><input type="radio" name={`sekolah_${s.id}`} value="Alpha" /></td>
-                <td><input type="radio" name={`sekolah_${s.id}`} value="Dispen" /></td>
-                <td><input type="radio" name={`shalat_${s.id}`} value="Ya" defaultChecked /></td>
-                <td><input type="radio" name={`shalat_${s.id}`} value="Tidak" /></td>
-                <td>
-                  <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm"
-                    onClick={() => hapusSiswa(s.id)}>Hapus</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow" onClick={simpanAbsensi}>
-          Simpan Absensi
-        </button>
-
-        {/* Panel manajemen guru */}
-        <div className="mt-10">
-          <h3 className="text-2xl font-bold mb-4 text-indigo-300">Manajemen Guru</h3>
-          <button className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-lg mb-4 shadow" onClick={tambahGuru}>
-            Tambah Guru
-          </button>
-          <table className="table-auto w-full text-left border border-gray-700 rounded-lg overflow-hidden">
+        {/* Absensi Sekolah */}
+        <div className="bg-gray-900/80 rounded-xl p-4 border border-indigo-500 shadow-lg">
+          <h3 className="text-xl font-bold text-indigo-300 mb-3">Absensi Sekolah</h3>
+          <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white mb-4" onClick={() => tambahSiswa('sekolah')}>Tambah Siswa Sekolah</button>
+          <table className="table-auto w-full border border-gray-700 rounded">
             <thead>
-              <tr className="bg-indigo-700 text-white">
-                <th className="px-4 py-2">Username</th>
-                <th className="px-4 py-2">Password</th>
-                <th className="px-4 py-2">Aksi</th>
+              <tr className="bg-indigo-700">
+                <th>No</th><th>Nama</th>
+                <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Dispen</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {guruList.length === 0 ? (
-                <tr><td colSpan={3} className="text-center p-4 text-gray-400">Belum ada guru</td></tr>
-              ) : guruList.map((g, idx) => (
-                <tr key={idx} className="border-t border-gray-700 hover:bg-gray-800 transition">
-                  <td className="px-4 py-2">{g.username}</td>
-                  <td className="px-4 py-2">{g.password}</td>
-                  <td>
-                    <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm"
-                      onClick={() => hapusGuru(g.username)}>Hapus</button>
-                  </td>
+              {siswaSekolah.map((s, i) => (
+                <tr key={s.id} className="border-t border-gray-600">
+                  <td>{i + 1}</td>
+                  <td>{s.nama}</td>
+                  {['Hadir','Izin','Sakit','Alpha','Dispen'].map(v => (
+                    <td key={v}><input type="radio" name={`sekolah_${s.id}`} value={v} defaultChecked={v==='Hadir'} /></td>
+                  ))}
+                  <td><button className="bg-red-600 px-3 py-1 rounded" onClick={() => hapusSiswa(s.id,'sekolah')}>Hapus</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button className="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded" onClick={() => simpanAbsensi('sekolah')}>Simpan Absensi Sekolah</button>
+        </div>
+
+        {/* Absensi Shalat */}
+        <div className="bg-gray-900/80 rounded-xl p-4 border border-purple-500 shadow-lg">
+          <h3 className="text-xl font-bold text-purple-300 mb-3">Absensi Shalat</h3>
+          <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white mb-4" onClick={() => tambahSiswa('shalat')}>Tambah Siswa Shalat</button>
+          <table className="table-auto w-full border border-gray-700 rounded">
+            <thead>
+              <tr className="bg-purple-700">
+                <th>No</th><th>Nama</th>
+                <th>Ya</th><th>Tidak</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {siswaShalat.map((s, i) => (
+                <tr key={s.id} className="border-t border-gray-600">
+                  <td>{i + 1}</td>
+                  <td>{s.nama}</td>
+                  {['Ya','Tidak'].map(v => (
+                    <td key={v}><input type="radio" name={`shalat_${s.id}`} value={v} defaultChecked={v==='Ya'} /></td>
+                  ))}
+                  <td><button className="bg-red-600 px-3 py-1 rounded" onClick={() => hapusSiswa(s.id,'shalat')}>Hapus</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button className="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded" onClick={() => simpanAbsensi('shalat')}>Simpan Absensi Shalat</button>
+        </div>
+
+        {/* Manajemen Guru */}
+        <div className="bg-gray-900/70 rounded-xl p-4 border border-pink-500 shadow-md mt-8">
+          <h3 className="text-xl font-bold text-pink-300 mb-3">Manajemen Guru</h3>
+          <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white mb-4" onClick={tambahGuru}>Tambah Guru</button>
+          <table className="table-auto w-full border border-gray-700 rounded">
+            <thead className="bg-pink-700">
+              <tr><th>Username</th><th>Password</th><th>Aksi</th></tr>
+            </thead>
+            <tbody>
+              {guruList.map((g, i) => (
+                <tr key={i} className="border-t border-gray-600">
+                  <td>{g.username}</td>
+                  <td>{g.password}</td>
+                  <td><button className="bg-red-600 px-3 py-1 rounded" onClick={() => hapusGuru(g.username)}>Hapus</button></td>
                 </tr>
               ))}
             </tbody>
@@ -229,4 +236,4 @@ export default function Admin() {
       </div>
     </div>
   );
-      }
+    }
