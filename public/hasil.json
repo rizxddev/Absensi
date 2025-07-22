@@ -1,1 +1,36 @@
-{}
+{
+  "kelas": "XI C",
+  "wali_kelas": "Gun Gun Nugraha",
+  "absensi": {
+    "2025-07-22": [
+      {
+        "nama": "AGUS D TIAN",
+        "shalat": "Tidak"
+      },
+      {
+        "nama": "CANDRA AHMAD SETIAWAN",
+        "shalat": "Ya"
+      },
+      {
+        "nama": "DAVID SOMANTRI",
+        "shalat": "Tidak"
+      },
+      {
+        "nama": "DENIS SUTRISNO",
+        "shalat": "Ya"
+      },
+      {
+        "nama": "EKA SYAHRIL GUSTIAN",
+        "shalat": "Ya"
+      },
+      {
+        "nama": "ERWAN HERYANTO",
+        "shalat": "Ya"
+      },
+      {
+        "nama": "HAMID FAUZIN",
+        "shalat": "Ya"
+      }
+    ]
+  }
+}
