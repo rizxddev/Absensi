@@ -4,7 +4,7 @@ export default function Admin() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
   const [kelas, setKelas] = useState("XI C");
-  const [wali, setWali] = useState("Gungun Nugraha");
+  const [wali, setWali] = useState("Gun Gun Nugraha");
   const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 10));
 
   const [siswaSekolah, setSiswaSekolah] = useState([]);
