@@ -10,8 +10,8 @@ export default function Guru() {
   const [salinText, setSalinText] = useState('');
 
   useEffect(() => {
-    // Fetch hasil sekolah
-    fetch('/hasil2.json', { cache: 'no-store' })
+    // Fetch hasil sekolah dari API
+    fetch('/api/getHasil', { cache: 'no-store' })
       .then(r => r.json())
       .then(json => {
         setDataSekolah(json);
@@ -20,8 +20,8 @@ export default function Guru() {
         setTanggalPilihSekolah(keys[0] || '');
       });
 
-    // Fetch hasil shalat
-    fetch('/hasil.json', { cache: 'no-store' })
+    // Fetch hasil shalat dari API
+    fetch('/api/getHasil2', { cache: 'no-store' })
       .then(r => r.json())
       .then(json => {
         setDataShalat(json);
@@ -173,4 +173,4 @@ export default function Guru() {
       </div>
     </div>
   );
-}
+                                                           }
