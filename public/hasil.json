@@ -2,13 +2,17 @@
   "kelas": "XI C",
   "wali_kelas": "Gungun Nugraha",
   "absensi": {
-    "2025-07-22": [
+    "2025-07-23": [
       {
         "nama": "16",
-        "shalat": "Tidak"
+        "shalat": "Ya"
       },
       {
         "nama": "w6",
+        "shalat": "Ya"
+      },
+      {
+        "nama": "333",
         "shalat": "Ya"
       }
     ]
