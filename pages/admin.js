@@ -9,7 +9,6 @@ export default function Admin() {
 
   const [siswaSekolah, setSiswaSekolah] = useState([]);
   const [siswaShalat, setSiswaShalat] = useState([]);
-  const [guruList, setGuruList] = useState([]);
 
   // Fetch siswa sekolah
   const fetchSiswaSekolah = async () => {
@@ -33,22 +32,10 @@ export default function Admin() {
     }
   };
 
-  // Fetch guru
-  const fetchGuru = async () => {
-    try {
-      const res = await fetch('/guru.json', { cache: 'no-store' });
-      const json = await res.json();
-      setGuruList(json.guru || []);
-    } catch {
-      setGuruList([]);
-    }
-  };
-
   useEffect(() => {
     const token = localStorage.getItem('admin_ok');
     if (token) {
       setLoggedIn(true);
-      fetchGuru();
       fetchSiswaSekolah();
       fetchSiswaShalat();
     }
@@ -59,7 +46,6 @@ export default function Admin() {
     if (password === ADMIN_PASS) {
       localStorage.setItem('admin_ok', 'true');
       setLoggedIn(true);
-      fetchGuru();
       fetchSiswaSekolah();
       fetchSiswaShalat();
     } else {
@@ -117,73 +103,45 @@ export default function Admin() {
     await simpanSiswaShalat(updated);
   };
 
-  // Simpan absensi sekolah & shalat
   // Simpan absensi sekolah
-const simpanAbsensiSekolah = async () => {
-  const hasil = siswaSekolah.map(s => ({
-    nama: s.nama,
-    sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
-  }));
-  const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
+  const simpanAbsensiSekolah = async () => {
+    const hasil = siswaSekolah.map(s => ({
+      nama: s.nama,
+      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
+    }));
+    const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
 
-  const res = await fetch('/api/updateHasil2', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  const json = await res.json();
-  if (json.success) {
-    alert('Absensi sekolah berhasil disimpan!');
-  } else {
-    alert('Gagal simpan absensi sekolah: ' + JSON.stringify(json.error || json));
-  }
-};
-
-  // Simpan absensi shalat
-const simpanAbsensiShalat = async () => {
-  const hasil = siswaShalat.map(s => ({
-    nama: s.nama,
-    shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
-  }));
-  const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
-
-  const res = await fetch('/api/updateHasil', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  const json = await res.json();
-  if (json.success) {
-    alert('Absensi shalat berhasil disimpan!');
-  } else {
-    alert('Gagal simpan absensi shalat: ' + JSON.stringify(json.error || json));
-  }
-};
-
-  // Manajemen guru
-  const simpanGuru = async (list) => {
-    const res = await fetch('/api/updateGuru', {
+    const res = await fetch('/api/updateHasil2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guru: list })
+      body: JSON.stringify(data)
     });
     const json = await res.json();
-    if (!json.success) alert('Gagal simpan guru: ' + JSON.stringify(json.error || json));
-  };
-  const tambahGuru = () => {
-    const username = prompt('Masukkan username guru:');
-    const pass = prompt('Masukkan password guru:');
-    if (username && pass) {
-      const updated = [...guruList, { username, password: pass }];
-      setGuruList(updated);
-      simpanGuru(updated);
+    if (json.success) {
+      alert('Absensi sekolah berhasil disimpan!');
+    } else {
+      alert('Gagal simpan absensi sekolah: ' + JSON.stringify(json.error || json));
     }
   };
-  const hapusGuru = (username) => {
-    if (confirm(`Hapus guru ${username}?`)) {
-      const updated = guruList.filter(g => g.username !== username);
-      setGuruList(updated);
-      simpanGuru(updated);
+
+  // Simpan absensi shalat
+  const simpanAbsensiShalat = async () => {
+    const hasil = siswaShalat.map(s => ({
+      nama: s.nama,
+      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
+    }));
+    const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
+
+    const res = await fetch('/api/updateHasil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (json.success) {
+      alert('Absensi shalat berhasil disimpan!');
+    } else {
+      alert('Gagal simpan absensi shalat: ' + JSON.stringify(json.error || json));
     }
   };
 
@@ -277,31 +235,6 @@ const simpanAbsensiShalat = async () => {
         </table>
         <button className="bg-blue-500 px-5 py-2 rounded mt-3" onClick={simpanAbsensiShalat}>Simpan Absensi Shalat</button>
       </div>
-
-      {/* Manajemen Guru */}
-      <div className="bg-gray-900/70 p-4 rounded-lg shadow">
-        <h3 className="text-xl font-bold text-pink-400 mb-3">Manajemen Guru</h3>
-        <button className="bg-green-500 px-4 py-2 rounded mb-4" onClick={tambahGuru}>Tambah Guru</button>
-        <table className="table-auto w-full text-white border">
-          <thead>
-            <tr className="bg-pink-700">
-              <th>Username</th><th>Password</th><th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {guruList.map((g, i) => (
-              <tr key={i} className="border-t border-gray-700">
-                <td>{g.username}</td>
-                <td>{g.password}</td>
-                <td><button onClick={() => hapusGuru(g.username)} className="bg-red-600 px-3 py-1 rounded">Hapus</button></td>
-              </tr>
-            ))}
-            {guruList.length === 0 && (
-              <tr><td colSpan="3" className="text-center text-gray-400">Belum ada guru</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
-            }
+        }
