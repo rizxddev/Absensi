@@ -104,25 +104,48 @@ export default function Admin() {
   };
 
   const simpanAbsensi = async () => {
-    const hasil = siswa.map(s => ({
+    const hasilShalat = siswa.map(s => ({
       nama: s.nama,
-      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha",
       shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
     }));
-    const dataExport = {
+
+    const hasilSekolah = siswa.map(s => ({
+      nama: s.nama,
+      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
+    }));
+
+    const dataExportShalat = {
       kelas,
       wali_kelas: wali,
-      absensi: { [tanggal]: hasil }
+      absensi: { [tanggal]: hasilShalat }
     };
 
-    const res = await fetch('/api/updateHasil', {
+    const dataExportSekolah = {
+      kelas,
+      wali_kelas: wali,
+      absensi: { [tanggal]: hasilSekolah }
+    };
+
+    // Simpan data absensi shalat
+    const resShalat = await fetch('/api/updateHasil', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dataExport)
+      body: JSON.stringify(dataExportShalat)
     });
-    const json = await res.json();
-    if (!json.success) {
-      alert('Gagal simpan absensi: ' + JSON.stringify(json.error || json));
+    const jsonShalat = await resShalat.json();
+    if (!jsonShalat.success) {
+      alert('Gagal simpan absensi shalat: ' + JSON.stringify(jsonShalat.error || jsonShalat));
+    }
+
+    // Simpan data absensi sekolah
+    const resSekolah = await fetch('/api/updateHasil2', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataExportSekolah)
+    });
+    const jsonSekolah = await resSekolah.json();
+    if (!jsonSekolah.success) {
+      alert('Gagal simpan absensi sekolah: ' + JSON.stringify(jsonSekolah.error || jsonSekolah));
     }
   };
 
