@@ -22,7 +22,7 @@ async function commitToGitHub({ owner, repo, path, token, content, sha, message 
 
   if (res.status === 200 || res.status === 201) {
     const result = await res.json();
-    return { success: true, message: 'Data absensi berhasil disimpan!', commitSha: result.commit?.sha };
+    return { success: true, message: 'Absensi shalat berhasil disimpan!', commitSha: result.commit?.sha };
   }
 
   const error = await res.json();
@@ -51,23 +51,20 @@ export default async function handler(req, res) {
 
     existing.kelas = kelas || existing.kelas;
     existing.wali_kelas = wali_kelas || existing.wali_kelas;
+    if (!existing.absensi) existing.absensi = {};
 
-    // Merge tanpa hapus data lama
+    // Merge data lama + baru
     for (const tgl in absensi) {
-      if (!existing.absensi[tgl]) {
-        existing.absensi[tgl] = absensi[tgl];
-      } else {
-        const updated = [...existing.absensi[tgl]];
-        absensi[tgl].forEach(newItem => {
-          const index = updated.findIndex(i => i.nama === newItem.nama);
-          if (index >= 0) {
-            updated[index] = newItem;
-          } else {
-            updated.push(newItem);
-          }
-        });
-        existing.absensi[tgl] = updated;
-      }
+      if (!existing.absensi[tgl]) existing.absensi[tgl] = [];
+      const updated = [...existing.absensi[tgl]];
+
+      absensi[tgl].forEach(newItem => {
+        const idx = updated.findIndex(i => i.nama === newItem.nama);
+        if (idx >= 0) updated[idx] = newItem;
+        else updated.push(newItem);
+      });
+
+      existing.absensi[tgl] = updated;
     }
 
     const result = await commitToGitHub({
@@ -77,7 +74,7 @@ export default async function handler(req, res) {
       token: GITHUB_TOKEN,
       content: existing,
       sha,
-      message: 'Update hasil absensi'
+      message: 'Update absensi shalat'
     });
 
     if (result.success) return res.status(200).json(result);
