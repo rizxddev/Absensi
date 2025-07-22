@@ -118,37 +118,47 @@ export default function Admin() {
   };
 
   // Simpan absensi sekolah & shalat
-  const simpanAbsensiSekolah = async () => {
-    const hasil = siswaSekolah.map(s => ({
-      nama: s.nama,
-      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
-    }));
-    const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
+  // Simpan absensi sekolah
+const simpanAbsensiSekolah = async () => {
+  const hasil = siswaSekolah.map(s => ({
+    nama: s.nama,
+    sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
+  }));
+  const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
 
-    const res = await fetch('/api/updateHasil2', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    if (!json.success) alert('Gagal simpan absensi sekolah: ' + JSON.stringify(json.error || json));
-  };
+  const res = await fetch('/api/updateHasil2', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  if (json.success) {
+    alert('Absensi sekolah berhasil disimpan!');
+  } else {
+    alert('Gagal simpan absensi sekolah: ' + JSON.stringify(json.error || json));
+  }
+};
 
-  const simpanAbsensiShalat = async () => {
-    const hasil = siswaShalat.map(s => ({
-      nama: s.nama,
-      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
-    }));
-    const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
+  // Simpan absensi shalat
+const simpanAbsensiShalat = async () => {
+  const hasil = siswaShalat.map(s => ({
+    nama: s.nama,
+    shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
+  }));
+  const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
 
-    const res = await fetch('/api/updateHasil', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    if (!json.success) alert('Gagal simpan absensi shalat: ' + JSON.stringify(json.error || json));
-  };
+  const res = await fetch('/api/updateHasil', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  if (json.success) {
+    alert('Absensi shalat berhasil disimpan!');
+  } else {
+    alert('Gagal simpan absensi shalat: ' + JSON.stringify(json.error || json));
+  }
+};
 
   // Manajemen guru
   const simpanGuru = async (list) => {
