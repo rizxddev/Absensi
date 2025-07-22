@@ -8,10 +8,8 @@ export default function Guru() {
   const [tanggalPilihSekolah, setTanggalPilihSekolah] = useState('');
   const [tanggalPilihShalat, setTanggalPilihShalat] = useState('');
   const [salinText, setSalinText] = useState('');
-  const [guruLogin, setGuruLogin] = useState('');
 
-  
-
+  useEffect(() => {
     // Fetch hasil sekolah
     fetch('/hasil2.json', { cache: 'no-store' })
       .then(r => r.json())
@@ -62,9 +60,8 @@ export default function Guru() {
     alert(`Hasil absensi (${tipe}) tanggal ${tgl} berhasil disalin!`);
   };
 
-  const logoutGuru = () => {
-   
-    window.location.href = '/';
+  const keluar = () => {
+    window.location.href = '/'; // kembali ke halaman utama
   };
 
   if (!dataSekolah || !dataShalat) {
@@ -74,10 +71,9 @@ export default function Guru() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
       <div className="max-w-5xl mx-auto bg-gray-900/80 p-6 rounded-2xl shadow-2xl border border-indigo-400/50">
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-sm text-gray-300">Halo Selamat Datang <b></b></p>
+        <div className="flex justify-end items-center mb-6">
           <button
-            onClick={logoutGuru}
+            onClick={keluar}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg text-sm"
           >
             Keluar
@@ -177,4 +173,4 @@ export default function Guru() {
       </div>
     </div>
   );
-                                                  }
+}
