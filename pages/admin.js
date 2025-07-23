@@ -1,27 +1,17 @@
 import { useState, useEffect } from 'react';
 
-export default function Admin() {
-
+export default function Admin2() {
   const [kelas, setKelas] = useState("XI C");
   const [wali, setWali] = useState("Gun Gun Nugraha");
   const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 10));
 
-  const [siswaSekolah, setSiswaSekolah] = useState([]);
   const [siswaShalat, setSiswaShalat] = useState([]);
+  const [salinText, setSalinText] = useState('');
 
-  const fetchSiswaSekolah = async () => {
+  // Ambil data siswa cowok
+  const fetchSiswa = async () => {
     try {
-      const res = await fetch('/api/getSiswa', { cache: 'no-store' });
-      const json = await res.json();
-      setSiswaSekolah(json.siswa || []);
-    } catch {
-      setSiswaSekolah([]);
-    }
-  };
-
-  const fetchSiswaShalat = async () => {
-    try {
-      const res = await fetch('/api/getSiswa2', { cache: 'no-store' });
+      const res = await fetch('/api/getSiswa', { cache: 'no-store' }); // siswa cowok ambil dari getSiswa2
       const json = await res.json();
       setSiswaShalat(json.siswa || []);
     } catch {
@@ -30,91 +20,44 @@ export default function Admin() {
   };
 
   useEffect(() => {
-  const token = localStorage.getItem('admin_ok');
-  if (!token) {
-    // Kalau belum login, langsung kembali ke halaman utama
-    window.location.href = '/';
-    return;
-  }
-  fetchSiswaSekolah();
-  fetchSiswaShalat();
-}, []);
-
+    const token = localStorage.getItem('admin_ok');
+    if (!token) {
+      window.location.href = '/';
+      return;
+    }
+    fetchSiswa();
+  }, []);
 
   const logout = () => {
     localStorage.removeItem('admin_ok');
-    setLoggedIn(false);
+    window.location.href = '/';
   };
 
-  const simpanSiswaSekolah = async (list) => {
+  const simpanSiswa = async (list) => {
     const res = await fetch('/api/updateSiswa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ siswa: list })
     });
     const json = await res.json();
-    if (json.success) fetchSiswaSekolah();
-    else alert('Gagal simpan siswa sekolah: ' + JSON.stringify(json.error || json));
+    if (json.success) fetchSiswa();
+    else alert('Gagal simpan siswa: ' + JSON.stringify(json.error || json));
   };
 
-  const simpanSiswaShalat = async (list) => {
-    const res = await fetch('/api/updateSiswa2', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ siswa: list })
-    });
-    const json = await res.json();
-    if (json.success) fetchSiswaShalat();
-    else alert('Gagal simpan siswa shalat: ' + JSON.stringify(json.error || json));
-  };
-
-  const tambahSiswaSekolah = async () => {
-    const nama = prompt('Nama siswa baru (Sekolah):');
-    if (!nama) return;
-    const updated = [...siswaSekolah, { id: Date.now(), nama }];
-    await simpanSiswaSekolah(updated);
-  };
-
-  const hapusSiswaSekolah = async (id) => {
-    if (!confirm('Hapus siswa ini (Sekolah)?')) return;
-    const updated = siswaSekolah.filter(s => s.id !== id);
-    await simpanSiswaSekolah(updated);
-  };
-
-  const tambahSiswaShalat = async () => {
-    const nama = prompt('Nama siswa baru (Shalat):');
+  const tambahSiswa = async () => {
+    const nama = prompt('Nama siswa baru:');
     if (!nama) return;
     const updated = [...siswaShalat, { id: Date.now(), nama }];
-    await simpanSiswaShalat(updated);
+    await simpanSiswa(updated);
   };
 
-  const hapusSiswaShalat = async (id) => {
-    if (!confirm('Hapus siswa ini (Shalat)?')) return;
+  const hapusSiswa = async (id) => {
+    if (!confirm('Hapus siswa ini?')) return;
     const updated = siswaShalat.filter(s => s.id !== id);
-    await simpanSiswaShalat(updated);
+    await simpanSiswa(updated);
   };
 
-  const simpanAbsensiSekolah = async () => {
-    const hasil = siswaSekolah.map(s => ({
-      nama: s.nama,
-      sekolah: document.querySelector(`input[name="sekolah_${s.id}"]:checked`)?.value || "Alpha"
-    }));
-    const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
-
-    const res = await fetch('/api/updateHasil2', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    if (json.success) {
-      alert('Absensi sekolah berhasil disimpan!');
-    } else {
-      alert('Gagal simpan absensi sekolah: ' + JSON.stringify(json.error || json));
-    }
-  };
-
-  const simpanAbsensiShalat = async () => {
+  const simpanAbsensi = async () => {
     const hasil = siswaShalat.map(s => ({
       nama: s.nama,
       shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
@@ -127,22 +70,44 @@ export default function Admin() {
       body: JSON.stringify(data)
     });
     const json = await res.json();
-    if (json.success) {
-      alert('Absensi shalat berhasil disimpan!');
-    } else {
-      alert('Gagal simpan absensi shalat: ' + JSON.stringify(json.error || json));
-    }
+    alert(json.success ? 'Absensi shalat siswa berhasil disimpan!' : 'Gagal simpan absensi siswa!');
   };
 
+  const salinHasil = () => {
+    const hasil = siswaShalat.map(s => ({
+      nama: s.nama,
+      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
+    }));
+
+    const total = hasil.length;
+    const jumlahYa = hasil.filter(h => h.shalat === 'Ya').length;
+    const jumlahTidak = hasil.filter(h => h.shalat === 'Tidak').length;
+    const jumlahDispen = hasil.filter(h => h.shalat === 'Dispen').length;
+    const jumlahTidakSekolah = hasil.filter(h => h.shalat === 'Tidak Sekolah').length;
+
+    let teks = `Rekap Absensi Shalat - Kelas ${kelas} (Wali Kelas: ${wali})\nTanggal: ${tanggal}\n\n`;
+
+    hasil.forEach((h, i) => {
+      let status = h.shalat;
+      if (h.shalat === 'Dispen') status = 'Tidak Sekolah (Dispen)';
+      teks += `${i + 1}. ${h.nama} | Shalat: ${status}\n`;
+    });
+
+    teks += `\n---\nSHALAT : ${jumlahYa} ORANG\nTIDAK SHALAT : ${jumlahTidak} ORANG\nDISPEN : ${jumlahDispen} ORANG\nTIDAK SEKOLAH : ${jumlahTidakSekolah} ORANG\nTOTAL SISWA : ${total} ORANG\n---\nLihat Hasil Absen\nhttps://absensi-xic.vercel.app\n---\nGenerated by Sistem Absensi Sekolah\n© 2025 - Created by Rizky`;
+
+    setSalinText(teks);
+    navigator.clipboard.writeText(teks);
+    alert('Hasil absensi berhasil disalin ke clipboard!');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
-      {/* Tombol Keluar */}
+      {/* Tombol Logout */}
       <div className="flex justify-end mb-4">
         <button onClick={logout} className="bg-red-600 px-4 py-2 rounded">Keluar</button>
       </div>
 
-      <h2 className="text-3xl font-bold text-center mb-6">Panel Admin Absensi</h2>
+      <h2 className="text-3xl font-bold text-center mb-6">Panel Admin Absensi (Siswa)</h2>
       <div className="flex flex-col md:flex-row justify-center space-x-0 md:space-x-6 mb-6">
         <label className="flex flex-col mb-2">
           <span>Tanggal:</span>
@@ -158,41 +123,14 @@ export default function Admin() {
         </label>
       </div>
 
-      {/* Absensi Sekolah */}
-      <div className="bg-gray-900/70 p-4 rounded-lg shadow mb-6">
-        <h3 className="text-xl font-bold text-blue-400 mb-3">Absensi Sekolah</h3>
-        <button className="bg-green-500 px-4 py-2 rounded mb-4" onClick={tambahSiswaSekolah}>Tambah Siswa Sekolah</button>
-        <table className="table-auto w-full text-white border">
-          <thead>
-            <tr className="bg-indigo-700">
-              <th>No</th><th>Nama</th>
-              <th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th><th>Dispen</th><th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {siswaSekolah.map((s, i) => (
-              <tr key={s.id} className="border-t border-gray-700">
-                <td>{i + 1}</td>
-                <td>{s.nama}</td>
-                {['Hadir', 'Izin', 'Sakit', 'Alpha', 'Dispen'].map(v => (
-                  <td key={v}><input type="radio" name={`sekolah_${s.id}`} value={v} defaultChecked={v === 'Hadir'} /></td>
-                ))}
-                <td><button onClick={() => hapusSiswaSekolah(s.id)} className="bg-red-600 px-3 py-1 rounded">Hapus</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button className="bg-blue-500 px-5 py-2 rounded mt-3" onClick={simpanAbsensiSekolah}>Simpan Absensi Sekolah</button>
-      </div>
-
-      {/* Absensi Shalat */}
+      {/* Absensi Shalat (Siswa) */}
       <div className="bg-gray-900/70 p-4 rounded-lg shadow">
-        <h3 className="text-xl font-bold text-purple-400 mb-3">Absensi Shalat</h3>
-        <button className="bg-green-500 px-4 py-2 rounded mb-4" onClick={tambahSiswaShalat}>Tambah Siswa Shalat</button>
+        <h3 className="text-xl font-bold text-purple-400 mb-3">Absensi Shalat Siswa</h3>
+        <button className="bg-green-500 px-4 py-2 rounded mb-4" onClick={tambahSiswa}>Tambah Siswa</button>
         <table className="table-auto w-full text-white border">
           <thead>
             <tr className="bg-purple-700">
-              <th>No</th><th>Nama</th><th>Ya</th><th>Tidak</th><th>Tidak Sekolah</th><th>Aksi</th>
+              <th>No</th><th>Nama</th><th>Ya</th><th>Tidak</th><th>Dispen</th><th>Tidak Sekolah</th><th>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -200,16 +138,30 @@ export default function Admin() {
               <tr key={s.id} className="border-t border-gray-700">
                 <td>{i + 1}</td>
                 <td>{s.nama}</td>
-                {/* Satu grup name supaya hanya bisa pilih salah satu */}
-                <td><input type="radio" name={`shalat_${s.id}`} value="Ya" defaultChecked /></td>
-                <td><input type="radio" name={`shalat_${s.id}`} value="Tidak" /></td>
-                <td><input type="radio" name={`shalat_${s.id}`} value="Tidak Sekolah" /></td>
-                <td><button onClick={() => hapusSiswaShalat(s.id)} className="bg-red-600 px-3 py-1 rounded">Hapus</button></td>
+                {/* Radio group per siswa */}
+                {['Ya', 'Tidak', 'Dispen', 'Tidak Sekolah'].map(v => (
+                  <td key={v}><input type="radio" name={`shalat_${s.id}`} value={v} defaultChecked={v === 'Ya'} /></td>
+                ))}
+                <td><button onClick={() => hapusSiswa(s.id)} className="bg-red-600 px-3 py-1 rounded">Hapus</button></td>
               </tr>
             ))}
           </tbody>
         </table>
-        <button className="bg-blue-500 px-5 py-2 rounded mt-3" onClick={simpanAbsensiShalat}>Simpan Absensi Shalat</button>
+
+        {/* Tombol Simpan dan Salin */}
+        <div className="flex flex-col md:flex-row justify-between items-center mt-4 gap-4">
+          <button className="bg-blue-500 px-5 py-2 rounded" onClick={simpanAbsensi}>Simpan Absensi</button>
+          <button className="bg-green-500 px-5 py-2 rounded" onClick={salinHasil}>Salin Hasil</button>
+        </div>
+
+        {/* Preview hasil salinan */}
+        <textarea
+          className="w-full mt-4 p-3 rounded-lg bg-gray-800 text-sm text-gray-100 border border-gray-700"
+          rows={8}
+          readOnly
+          value={salinText}
+          placeholder="Hasil salinan absensi akan muncul di sini setelah disalin"
+        ></textarea>
       </div>
     </div>
   );
