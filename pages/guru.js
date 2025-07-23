@@ -10,7 +10,7 @@ export default function Guru() {
   const [salinText, setSalinText] = useState('');
 
   useEffect(() => {
-    fetch('/api/getHasil', { cache: 'no-store' })
+    fetch('/api/getHasil2', { cache: 'no-store' })
       .then(r => r.json())
       .then(json => {
         setDataSekolah(json);
@@ -19,7 +19,7 @@ export default function Guru() {
         setTanggalPilihSekolah(keys[0] || '');
       });
 
-    fetch('/api/getHasil2', { cache: 'no-store' })
+    fetch('/api/getHasil', { cache: 'no-store' })
       .then(r => r.json())
       .then(json => {
         setDataShalat(json);
