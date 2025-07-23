@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export default function Admin() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [password, setPassword] = useState("");
+
   const [kelas, setKelas] = useState("XI C");
   const [wali, setWali] = useState("Gun Gun Nugraha");
   const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 10));
@@ -31,25 +30,16 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_ok');
-    if (token) {
-      setLoggedIn(true);
-      fetchSiswaSekolah();
-      fetchSiswaShalat();
-    }
-  }, []);
+  const token = localStorage.getItem('admin_ok');
+  if (!token) {
+    // Kalau belum login, langsung kembali ke halaman utama
+    window.location.href = '/';
+    return;
+  }
+  fetchSiswaSekolah();
+  fetchSiswaShalat();
+}, []);
 
-  const login = () => {
-    const ADMIN_PASS = "1234";
-    if (password === ADMIN_PASS) {
-      localStorage.setItem('admin_ok', 'true');
-      setLoggedIn(true);
-      fetchSiswaSekolah();
-      fetchSiswaShalat();
-    } else {
-      alert('Password salah!');
-    }
-  };
 
   const logout = () => {
     localStorage.removeItem('admin_ok');
@@ -144,26 +134,6 @@ export default function Admin() {
     }
   };
 
-  if (!loggedIn) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen space-y-4">
-        <h2 className="text-xl font-bold">Login Admin</h2>
-        <input
-          type="password"
-          className="border px-3 py-2"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          onClick={login}
-        >
-          Login
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
