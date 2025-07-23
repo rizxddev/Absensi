@@ -9,7 +9,6 @@ export default function Home() {
 
   const openModal = (roleType) => {
     if (roleType === 'guru') {
-      // Guru langsung lihat absensi tanpa login
       router.push('/guru');
     } else {
       setRole(roleType);
@@ -23,12 +22,23 @@ export default function Home() {
   };
 
   const handleLogin = () => {
+    const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    const ADMIN2_PASS = process.env.NEXT_PUBLIC_ADMIN2_PASSWORD;
+
     if (role === 'admin') {
-      if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
+      if (password === ADMIN_PASS) {
         localStorage.setItem('admin_ok', 'true');
         router.push('/admin');
       } else {
-        alert('Password admin salah!');
+        alert('Password Admin salah!');
+      }
+      closeModal();
+    } else if (role === 'admin2') {
+      if (password === ADMIN2_PASS) {
+        localStorage.setItem('admin_ok', 'true');
+        router.push('/admin2');
+      } else {
+        alert('Password Admin 2 salah!');
       }
       closeModal();
     }
@@ -57,22 +67,28 @@ export default function Home() {
           >
             Login Admin
           </button>
+          <button
+            onClick={() => openModal('admin2')}
+            className="w-full py-3 text-lg rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-pink-500/50 transition-all duration-300"
+          >
+            Login Admin 2
+          </button>
         </div>
         <p className="mt-6 text-sm text-gray-400">
           © 2025 Sistem Absensi Sekolah by Rizky
         </p>
       </div>
 
-      {/* Modal Login Admin */}
+      {/* Modal Login */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 animate-fadeIn">
           <div className="bg-gray-900 border border-indigo-400/50 p-6 rounded-2xl shadow-2xl w-80 animate-slideUp">
             <h2 className="text-xl font-bold text-center text-indigo-200 mb-4">
-              🔒 Login Admin
+              🔒 {role === 'admin2' ? 'Login Admin 2' : 'Login Admin'}
             </h2>
             <input
               type="password"
-              placeholder="Password Admin"
+              placeholder={`Password ${role === 'admin2' ? 'Admin 2' : 'Admin'}`}
               className="w-full border border-indigo-400 rounded-lg px-3 py-2 mb-4 bg-gray-800 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -95,7 +111,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Animasi tambahan di global.css */}
+      {/* Animasi tambahan */}
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -105,12 +121,8 @@ export default function Home() {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out forwards;
-        }
-        .animate-slideUp {
-          animation: slideUp 0.4s ease-out forwards;
-        }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slideUp { animation: slideUp 0.4s ease-out forwards; }
       `}</style>
     </div>
   );
