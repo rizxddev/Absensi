@@ -46,7 +46,7 @@ export default function Guru() {
   const tidakSekolah = list.filter(s => s.tidakSekolah && s.tidakSekolah.toLowerCase() === 'ya').length;
 
   let judul = tipe === 'sekolah' ? 'Rekap Absensi Sekolah' : 'Rekap Absensi Shalat';
-  let teks = `${judul} - Kelas ${data.kelas} (Wali: ${data.wali_kelas})\nTanggal: ${tgl}\n\n`;
+  let teks = `${judul} - Kelas ${data.kelas} (Wali Kelas: ${data.wali_kelas})\nTanggal: ${tgl}\n\n`;
 
   list.forEach((r, i) => {
     if (tipe === 'sekolah') {
