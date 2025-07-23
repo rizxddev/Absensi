@@ -13,12 +13,12 @@ export default async function handler(req, res) {
     const data = await resp.json();
 
     if (!data.content) {
-      return res.status(200).json({ siswa: [] });
+      return res.status(200).json({ siswi: [] });
     }
 
     const decoded = JSON.parse(Buffer.from(data.content, 'base64').toString());
     return res.status(200).json(decoded);
   } catch (err) {
-    return res.status(500).json({ siswa: [], error: err.message });
+    return res.status(500).json({ siswi: [], error: err.message });
   }
 }
