@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   const OWNER = process.env.GITHUB_OWNER;
   const REPO = process.env.GITHUB_REPO;
-  const PATH = 'public/siswa2.json';
+  const PATH = 'public/siswi.json';
   const TOKEN = process.env.GITHUB_TOKEN;
 
   try {
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const data = await resp.json();
 
     if (!data.content) {
-      return res.status(200).json({ siswa: [] });
+      return res.status(200).json({ siswi: [] });
     }
 
     const decoded = JSON.parse(Buffer.from(data.content, 'base64').toString());
