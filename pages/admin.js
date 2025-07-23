@@ -10,7 +10,6 @@ export default function Admin() {
   const [siswaSekolah, setSiswaSekolah] = useState([]);
   const [siswaShalat, setSiswaShalat] = useState([]);
 
-  // Fetch siswa sekolah
   const fetchSiswaSekolah = async () => {
     try {
       const res = await fetch('/api/getSiswa', { cache: 'no-store' });
@@ -21,7 +20,6 @@ export default function Admin() {
     }
   };
 
-  // Fetch siswa shalat
   const fetchSiswaShalat = async () => {
     try {
       const res = await fetch('/api/getSiswa2', { cache: 'no-store' });
@@ -53,7 +51,11 @@ export default function Admin() {
     }
   };
 
-  // Simpan siswa sekolah
+  const logout = () => {
+    localStorage.removeItem('admin_ok');
+    setLoggedIn(false);
+  };
+
   const simpanSiswaSekolah = async (list) => {
     const res = await fetch('/api/updateSiswa', {
       method: 'POST',
@@ -65,7 +67,6 @@ export default function Admin() {
     else alert('Gagal simpan siswa sekolah: ' + JSON.stringify(json.error || json));
   };
 
-  // Simpan siswa shalat
   const simpanSiswaShalat = async (list) => {
     const res = await fetch('/api/updateSiswa2', {
       method: 'POST',
@@ -77,7 +78,6 @@ export default function Admin() {
     else alert('Gagal simpan siswa shalat: ' + JSON.stringify(json.error || json));
   };
 
-  // Tambah & hapus siswa sekolah
   const tambahSiswaSekolah = async () => {
     const nama = prompt('Nama siswa baru (Sekolah):');
     if (!nama) return;
@@ -90,7 +90,6 @@ export default function Admin() {
     await simpanSiswaSekolah(updated);
   };
 
-  // Tambah & hapus siswa shalat 
   const tambahSiswaShalat = async () => {
     const nama = prompt('Nama siswa baru (Shalat):');
     if (!nama) return;
@@ -103,7 +102,6 @@ export default function Admin() {
     await simpanSiswaShalat(updated);
   };
 
-  // Simpan absensi sekolah
   const simpanAbsensiSekolah = async () => {
     const hasil = siswaSekolah.map(s => ({
       nama: s.nama,
@@ -124,11 +122,11 @@ export default function Admin() {
     }
   };
 
-  // Simpan absensi shalat
   const simpanAbsensiShalat = async () => {
     const hasil = siswaShalat.map(s => ({
       nama: s.nama,
-      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
+      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak",
+      tidakSekolah: document.querySelector(`input[name="tidakSekolah_${s.id}"]:checked`)?.value || "Tidak"
     }));
     const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
 
@@ -168,6 +166,11 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
+      {/* Tombol Keluar */}
+      <div className="flex justify-end mb-4">
+        <button onClick={logout} className="bg-red-600 px-4 py-2 rounded">Keluar</button>
+      </div>
+
       <h2 className="text-3xl font-bold text-center mb-6">Panel Admin Absensi</h2>
       <div className="flex flex-col md:flex-row justify-center space-x-0 md:space-x-6 mb-6">
         <label className="flex flex-col mb-2">
@@ -212,13 +215,13 @@ export default function Admin() {
       </div>
 
       {/* Absensi Shalat */}
-      <div className="bg-gray-900/70 p-4 rounded-lg shadow mb-6">
+      <div className="bg-gray-900/70 p-4 rounded-lg shadow">
         <h3 className="text-xl font-bold text-purple-400 mb-3">Absensi Shalat</h3>
         <button className="bg-green-500 px-4 py-2 rounded mb-4" onClick={tambahSiswaShalat}>Tambah Siswa Shalat</button>
         <table className="table-auto w-full text-white border">
           <thead>
             <tr className="bg-purple-700">
-              <th>No</th><th>Nama</th><th>Ya</th><th>Tidak</th><th>Aksi</th>
+              <th>No</th><th>Nama</th><th>Ya</th><th>Tidak</th><th>Tidak Sekolah</th><th>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -228,6 +231,7 @@ export default function Admin() {
                 <td>{s.nama}</td>
                 <td><input type="radio" name={`shalat_${s.id}`} value="Ya" defaultChecked /></td>
                 <td><input type="radio" name={`shalat_${s.id}`} value="Tidak" /></td>
+                <td><input type="radio" name={`tidakSekolah_${s.id}`} value="Ya" /></td>
                 <td><button onClick={() => hapusSiswaShalat(s.id)} className="bg-red-600 px-3 py-1 rounded">Hapus</button></td>
               </tr>
             ))}
@@ -237,4 +241,4 @@ export default function Admin() {
       </div>
     </div>
   );
-        }
+    }
