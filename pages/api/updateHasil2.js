@@ -22,7 +22,7 @@ async function commitToGitHub({ owner, repo, path, token, content, sha, message 
 
   if (res.status === 200 || res.status === 201) {
     const result = await res.json();
-    return { success: true, message: 'Absensi sekolah berhasil disimpan!', commitSha: result.commit?.sha };
+    return { success: true, message: 'Absensi shalat berhasil disimpan!', commitSha: result.commit?.sha };
   }
 
   const error = await res.json();
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       token: GITHUB_TOKEN,
       content: existing,
       sha,
-      message: 'Update absensi sekolah'
+      message: 'Update absensi shalat'
     });
 
     if (result.success) return res.status(200).json(result);
