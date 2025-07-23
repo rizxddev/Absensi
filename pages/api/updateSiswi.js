@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   const OWNER = process.env.GITHUB_OWNER;
   const REPO = process.env.GITHUB_REPO;
-  const PATH = 'public/siswa2.json';
+  const PATH = 'public/siswi.json';
 
   try {
     // Ambil SHA terbaru dulu
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: 'Update data siswa', content: contentEncoded, sha })
+      body: JSON.stringify({ message: 'Update data siswi', content: contentEncoded, sha })
     });
 
     // Jika konflik (409), ambil SHA terbaru dan simpan ulang
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
           Authorization: `Bearer ${GITHUB_TOKEN}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: 'Retry update data siswa', content: contentEncoded, sha })
+        body: JSON.stringify({ message: 'Retry update data siswi', content: contentEncoded, sha })
       });
     }
 
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     if (save.status === 200 || save.status === 201) {
       return res.status(200).json({
         success: true,
-        message: 'Data siswa berhasil disimpan!',
+        message: 'Data siswi berhasil disimpan!',
         commitSha: result.commit?.sha
       });
     } else {
