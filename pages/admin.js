@@ -84,6 +84,7 @@ export default function Admin() {
     const updated = [...siswaSekolah, { id: Date.now(), nama }];
     await simpanSiswaSekolah(updated);
   };
+
   const hapusSiswaSekolah = async (id) => {
     if (!confirm('Hapus siswa ini (Sekolah)?')) return;
     const updated = siswaSekolah.filter(s => s.id !== id);
@@ -96,6 +97,7 @@ export default function Admin() {
     const updated = [...siswaShalat, { id: Date.now(), nama }];
     await simpanSiswaShalat(updated);
   };
+
   const hapusSiswaShalat = async (id) => {
     if (!confirm('Hapus siswa ini (Shalat)?')) return;
     const updated = siswaShalat.filter(s => s.id !== id);
@@ -125,8 +127,7 @@ export default function Admin() {
   const simpanAbsensiShalat = async () => {
     const hasil = siswaShalat.map(s => ({
       nama: s.nama,
-      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak",
-      tidakSekolah: document.querySelector(`input[name="tidakSekolah_${s.id}"]:checked`)?.value || "Tidak"
+      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
     }));
     const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
 
@@ -229,9 +230,10 @@ export default function Admin() {
               <tr key={s.id} className="border-t border-gray-700">
                 <td>{i + 1}</td>
                 <td>{s.nama}</td>
+                {/* Satu grup name supaya hanya bisa pilih salah satu */}
                 <td><input type="radio" name={`shalat_${s.id}`} value="Ya" defaultChecked /></td>
                 <td><input type="radio" name={`shalat_${s.id}`} value="Tidak" /></td>
-                <td><input type="radio" name={`tidakSekolah_${s.id}`} value="Ya" /></td>
+                <td><input type="radio" name={`shalat_${s.id}`} value="Tidak Sekolah" /></td>
                 <td><button onClick={() => hapusSiswaShalat(s.id)} className="bg-red-600 px-3 py-1 rounded">Hapus</button></td>
               </tr>
             ))}
@@ -241,4 +243,4 @@ export default function Admin() {
       </div>
     </div>
   );
-    }
+}
