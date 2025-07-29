@@ -7,6 +7,8 @@ export default function Admin2() {
 
   const [siswiShalat, setSiswiShalat] = useState([]);
   const [salinText, setSalinText] = useState('');
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState('');
 
   // Ambil data siswi
   const fetchSiswiShalat = async () => {
@@ -70,7 +72,7 @@ export default function Admin2() {
       body: JSON.stringify(data)
     });
     const json = await res.json();
-    alert(json.success ? 'Absensi siswi berhasil disimpan!' : 'Gagal simpan absensi siswi!');
+    alert(json.success ? `Absensi siswi tersimpan (Tanggal ${tanggal})!` : 'Gagal simpan absensi siswi!');
   };
 
   const salinHasil = () => {
@@ -103,10 +105,42 @@ export default function Admin2() {
     alert('Hasil absensi berhasil disalin!');
   };
 
+  // Import dari teks rekap
+  const importAbsensi = () => {
+    const tanggalMatch = importText.match(/Tanggal:\s*(\d{4}-\d{2}-\d{2})/);
+    if (!tanggalMatch) return alert('Tanggal tidak ditemukan di teks!');
+    const tglRekap = tanggalMatch[1];
+    setTanggal(tglRekap);
+
+    const lines = importText.split('\n').filter(line => /^\d+\./.test(line));
+    const mapping = {};
+    lines.forEach(line => {
+      const [ , nama, statusRaw ] = line.match(/^\d+\.\s*(.*?)\s*\|\s*Shalat:\s*(.*)$/) || [];
+      if (nama) mapping[nama.trim()] = statusRaw.trim();
+    });
+
+    // Isi status di radio sesuai mapping
+    siswiShalat.forEach(s => {
+      const status = mapping[s.nama];
+      if (status) {
+        const val = status.includes('Dispen') ? 'Dispen' :
+                    status.includes('Halangan') ? 'Halangan' :
+                    status.includes('Tidak Sekolah') ? 'Tidak Sekolah' :
+                    status.includes('Tidak') ? 'Tidak' : 'Ya';
+        const radio = document.querySelector(`input[name="shalat_${s.id}"][value="${val}"]`);
+        if (radio) radio.checked = true;
+      }
+    });
+
+    simpanAbsensiShalat();
+    setShowImport(false);
+    alert(`Absensi diimpor & disimpan untuk tanggal ${tglRekap}!`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white p-6">
-      {/* Tombol Keluar */}
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 space-x-2">
+        <button onClick={() => setShowImport(true)} className="bg-yellow-500 px-4 py-2 rounded">Import Absensi</button>
         <button onClick={logout} className="bg-red-600 px-4 py-2 rounded">Keluar</button>
       </div>
 
@@ -142,7 +176,6 @@ export default function Admin2() {
               <tr key={s.id} className="border-t border-gray-700">
                 <td>{i + 1}</td>
                 <td>{s.nama}</td>
-                {/* Semua radio satu grup per siswi */}
                 {['Ya', 'Tidak', 'Halangan', 'Dispen', 'Tidak Sekolah'].map(opt => (
                   <td key={opt}><input type="radio" name={`shalat_${s.id}`} value={opt} defaultChecked={opt === 'Ya'} /></td>
                 ))}
@@ -157,6 +190,25 @@ export default function Admin2() {
         </div>
       </div>
 
+      {/* Modal Import Absensi */}
+      {showImport && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-lg w-full">
+            <h3 className="text-lg font-bold mb-4">Import Absensi dari Teks</h3>
+            <textarea
+              className="w-full h-48 p-3 rounded bg-gray-900 text-white border border-gray-600"
+              placeholder="Paste teks rekap di sini..."
+              value={importText}
+              onChange={e => setImportText(e.target.value)}
+            />
+            <div className="flex justify-end space-x-3 mt-4">
+              <button onClick={() => setShowImport(false)} className="bg-gray-600 px-4 py-2 rounded">Batal</button>
+              <button onClick={importAbsensi} className="bg-yellow-500 px-4 py-2 rounded">Import & Simpan</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Preview hasil salinan */}
       <textarea
         className="w-full mt-4 p-3 rounded-lg bg-gray-800 text-sm text-gray-100 border border-gray-700"
@@ -167,4 +219,4 @@ export default function Admin2() {
       ></textarea>
     </div>
   );
-}
+                                    }
