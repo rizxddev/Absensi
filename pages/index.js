@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { FaUserGraduate, FaUserShield, FaUsers } from 'react-icons/fa';
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
@@ -45,36 +46,44 @@ export default function Home() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white relative">
-      <div className="bg-gradient-to-br from-indigo-700 to-purple-700 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-indigo-400/50 backdrop-blur-md">
-        <div className="text-5xl mb-4 animate-pulse">👑</div>
-        <h1 className="text-3xl font-bold text-indigo-200 drop-shadow-lg mb-2">
+    <div className="relative flex items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white">
+      {/* Background efek bintang */}
+      <div className="absolute inset-0 bg-[url('/stars.gif')] bg-cover opacity-30 animate-pulse"></div>
+
+      {/* Card utama */}
+      <div className="relative z-10 bg-gradient-to-br from-indigo-700/80 to-purple-800/80 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-indigo-400/50 backdrop-blur-md transform transition hover:scale-[1.02] hover:shadow-indigo-500/40 duration-500">
+        <div className="text-6xl mb-4 animate-bounce">👑</div>
+        <h1 className="text-3xl font-extrabold text-indigo-200 drop-shadow-lg mb-2">
           Sistem Absensi Sekolah
         </h1>
-        <p className="text-gray-300 mb-6">
-          Pilih untuk melihat absensi siswa atau login sebagai Admin.
+        <p className="text-gray-300 mb-8 text-sm">
+          Pilih mode untuk melihat absensi atau login.
         </p>
-        <div className="space-y-4">
+
+        <div className="space-y-5">
           <button
             onClick={() => openModal('guru')}
-            className="w-full py-3 text-lg rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-600 hover:to-blue-600 shadow-lg hover:shadow-blue-500/50 transition-all duration-300"
+            className="w-full flex items-center justify-center gap-3 py-4 text-lg rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:scale-105 hover:from-indigo-600 hover:to-blue-600 shadow-xl hover:shadow-blue-500/50 transition-all duration-300"
           >
-            Lihat Absensi
+            <FaUserGraduate className="text-2xl" /> Lihat Absensi
           </button>
+
           <button
             onClick={() => openModal('admin')}
-            className="w-full py-3 text-lg rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-emerald-600 hover:to-green-600 shadow-lg hover:shadow-green-500/50 transition-all duration-300"
+            className="w-full flex items-center justify-center gap-3 py-4 text-lg rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-105 hover:from-emerald-600 hover:to-green-600 shadow-xl hover:shadow-green-500/50 transition-all duration-300"
           >
-            Login Admin
+            <FaUserShield className="text-2xl" /> Login Admin
           </button>
+
           <button
             onClick={() => openModal('admin2')}
-            className="w-full py-3 text-lg rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-pink-500/50 transition-all duration-300"
+            className="w-full flex items-center justify-center gap-3 py-4 text-lg rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-105 hover:from-purple-700 hover:to-pink-600 shadow-xl hover:shadow-pink-500/50 transition-all duration-300"
           >
-            Login Admin 2
+            <FaUsers className="text-2xl" /> Login Admin 2
           </button>
         </div>
-        <p className="mt-6 text-sm text-gray-400">
+
+        <p className="mt-8 text-sm text-gray-400">
           © 2025 Sistem Absensi Sekolah by Rizky
         </p>
       </div>
@@ -82,7 +91,7 @@ export default function Home() {
       {/* Modal Login */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 animate-fadeIn">
-          <div className="bg-gray-900 border border-indigo-400/50 p-6 rounded-2xl shadow-2xl w-80 animate-slideUp">
+          <div className="bg-gray-900/95 border border-indigo-400/50 p-6 rounded-2xl shadow-2xl w-80 animate-slideUp">
             <h2 className="text-xl font-bold text-center text-indigo-200 mb-4">
               🔒 {role === 'admin2' ? 'Login Admin 2' : 'Login Admin'}
             </h2>
@@ -102,7 +111,7 @@ export default function Home() {
               </button>
               <button
                 onClick={handleLogin}
-                className="flex-1 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-600 hover:to-indigo-600 text-white py-2 rounded-lg shadow-lg hover:shadow-indigo-500/50 transition-all duration-300"
+                className="flex-1 bg-gradient-to-r from-indigo-500 to-blue-500 hover:scale-105 hover:from-blue-600 hover:to-indigo-600 text-white py-2 rounded-lg shadow-lg hover:shadow-indigo-500/50 transition-all duration-300"
               >
                 Login
               </button>
@@ -118,12 +127,12 @@ export default function Home() {
           to { opacity: 1; }
         }
         @keyframes slideUp {
-          from { opacity: 0; transform: translateY(30px); }
+          from { opacity: 0; transform: translateY(40px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
-        .animate-slideUp { animation: slideUp 0.4s ease-out forwards; }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideUp { animation: slideUp 0.5s ease-out forwards; }
       `}</style>
     </div>
   );
-}
+              }
