@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export default function Admin2() {
   const [kelas, setKelas] = useState("XI C");
-  const [wali, setWali] = useState("Gun Gun Nugraha");
+  const [wali, setWali] = useState("Bu Kartika");
   const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 10));
 
   const [siswaShalat, setSiswaShalat] = useState([]);
