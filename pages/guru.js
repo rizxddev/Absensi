@@ -147,29 +147,29 @@ export default function Guru() {
     const title = `📊 REKAP ABSENSI SHALAT ${tipe.toUpperCase()} - KELAS ${data.kelas}\n`;
     const subtitle = `Wali Kelas: ${data.wali_kelas} | Tanggal: ${tgl}\n\n`;
     
-    let body = `📋 DAFTAR ${tipe === 'siswa' ? 'SISWA' : 'SISWI'}:\n`;
+    let bodyText = `📋 DAFTAR ${tipe === 'siswa' ? 'SISWA' : 'SISWI'}:\n`;
     list.forEach((r, i) => {
       const statusIcon = r.shalat === 'Ya' ? '✅' : 
                         r.shalat === 'Tidak' ? '❌' : 
                         r.shalat === 'Halangan' ? '⚠️' : 
                         r.shalat === 'Dispen' ? '📝' : '🏠';
-      body += `${i + 1}. ${r.nama} ${statusIcon} ${r.shalat}\n`;
+      bodyText += `${i + 1}. ${r.nama} ${statusIcon} ${r.shalat}\n`;
     });
 
-    const footer = `\n📈 STATISTIK:\n`;
-    footer += `├─ Shalat: ${stats.shalat} orang (${Math.round((stats.shalat/total)*100)}%)\n`;
-    footer += `├─ Tidak Shalat: ${stats.tidak} orang (${Math.round((stats.tidak/total)*100)}%)\n`;
+    let footerText = `\n📈 STATISTIK:\n`;
+    footerText += `├─ Shalat: ${stats.shalat} orang (${Math.round((stats.shalat/total)*100)}%)\n`;
+    footerText += `├─ Tidak Shalat: ${stats.tidak} orang (${Math.round((stats.tidak/total)*100)}%)\n`;
     if (tipe === 'siswi') {
-      footer += `├─ Halangan: ${stats.halangan} orang (${Math.round((stats.halangan/total)*100)}%)\n`;
+      footerText += `├─ Halangan: ${stats.halangan} orang (${Math.round((stats.halangan/total)*100)}%)\n`;
     }
-    footer += `├─ Dispen: ${stats.dispen} orang (${Math.round((stats.dispen/total)*100)}%)\n`;
-    footer += `├─ Tidak Sekolah: ${stats.tidakSekolah} orang (${Math.round((stats.tidakSekolah/total)*100)}%)\n`;
-    footer += `└─ Total: ${total} orang\n\n`;
-    footer += `🏫 Persentase Kehadiran: ${Math.round(((stats.shalat + stats.tidak + stats.halangan)/total)*100)}%\n\n`;
-    footer += `🔗 Lihat Hasil: https://absensi-xic.vercel.app\n`;
-    footer += `© 2025 - Sistem Absensi Sekolah by Rizky`;
+    footerText += `├─ Dispen: ${stats.dispen} orang (${Math.round((stats.dispen/total)*100)}%)\n`;
+    footerText += `├─ Tidak Sekolah: ${stats.tidakSekolah} orang (${Math.round((stats.tidakSekolah/total)*100)}%)\n`;
+    footerText += `└─ Total: ${total} orang\n\n`;
+    footerText += `🏫 Persentase Kehadiran: ${Math.round(((stats.shalat + stats.tidak + stats.halangan)/total)*100)}%\n\n`;
+    footerText += `🔗 Lihat Hasil: https://absensi-xic.vercel.app\n`;
+    footerText += `© 2025 - Sistem Absensi Sekolah by Rizky`;
 
-    return title + subtitle + body + footer;
+    return title + subtitle + bodyText + footerText;
   };
 
   const salinRekap = (tipe) => {
@@ -475,7 +475,7 @@ export default function Guru() {
                       <td className="p-4 text-gray-400 text-sm">
                         {item.shalat === 'Ya' ? 'Sudah shalat' : 
                          item.shalat === 'Tidak' ? 'Belum shalat' :
-                         item.shalat === 'Halangan' ? 'Halangan' :
+                         item.shalat === 'Halangan' ? 'Ada halangan' :
                          item.shalat === 'Dispen' ? 'Dispensasi' : 'Tidak sekolah'}
                       </td>
                     </tr>
