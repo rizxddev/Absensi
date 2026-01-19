@@ -14,7 +14,20 @@ export default function Home() {
   // Helper function to get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+    return today.toISOString().split('T')[0];
+  };
+
+  // Helper function to format date like example
+  const formatNotificationDate = () => {
+    const now = new Date();
+    const day = now.getDate();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year}, ${hours}.${minutes}.${seconds}`;
   };
 
   // Load disclaimer from API
@@ -22,7 +35,6 @@ export default function Home() {
     const loadDisclaimer = async () => {
       setIsLoadingDisclaimer(true);
       try {
-        // Try to fetch from API
         const response = await fetch('/api/getDisclaimer', {
           cache: 'no-store'
         });
@@ -32,19 +44,15 @@ export default function Home() {
           if (result.success && result.data) {
             setDisclaimerText(result.data.text);
             localStorage.setItem('disclaimer_text', result.data.text);
-            localStorage.setItem('disclaimer_source', result.source || 'api');
-            localStorage.setItem('disclaimer_version', result.data.version || 1);
           }
         } else {
           throw new Error('API Error');
         }
       } catch (error) {
         console.log('Using fallback disclaimer');
-        // Fallback to localStorage or default
         const localDisclaimer = localStorage.getItem('disclaimer_text');
-        const defaultText = `⚠️ **DISCLAIMER** ⚠️
-
-DILARANG KERAS MENG COPY-PASTE TEKS ABSENSI KITA!
+        const defaultText = `DILARANG KERAS MENG COPY-PASTE TEKS ABSENSI KITA!
+MINIMAL CREATIVE LAH BOSS!
 
 Sistem ini dibuat dengan ❤️ oleh Rizky.
 Hargai karya orang lain dengan tidak menyalin mentah-mentah.
@@ -54,7 +62,7 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
 📱 Contact: 
 • Instagram: @rizkyh358
 • WhatsApp: 0838-6116-3950
-• Email: rzxddev@gmail.com
+• Email: rizxddev@gmail.com
 
 💡 Tips:
 • Buat sistem sendiri dengan kreativitas
@@ -76,18 +84,13 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
         const lastAgreedDate = localStorage.getItem('disclaimer_last_agreed_date');
         const dontShowAgainDate = localStorage.getItem('dont_show_disclaimer_until');
         
-        // Logic: Show disclaimer if:
-        // 1. User never agreed before, OR
-        // 2. User agreed but not today, OR
-        // 3. "Don't show again" was clicked but for a different day
-        
         let shouldShowDisclaimer = true;
         
         // Check "Don't show again" option (expires at end of day)
         if (dontShowAgainDate === today) {
           shouldShowDisclaimer = false;
         }
-        // Check if user agreed today
+        // Check if useagreed today
         else if (lastAgreedDate === today) {
           shouldShowDisclaimer = false;
         }
@@ -165,22 +168,64 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
     setShowDisclaimer(false);
   };
 
-  const formatDisclaimerText = (text) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-yellow-300">$1</strong>')
-      .split('\n')
-      .map(line => {
-        if (line.trim() === '') return '<br/>';
-        if (line.includes('⚠️')) return `<div class="text-3xl text-center mb-4 font-bold text-yellow-400">${line}</div>`;
-        if (line.includes('📱') || line.includes('💡') || line.includes('✨')) {
-          return `<div class="font-bold text-yellow-300 mt-6 mb-3 text-lg">${line}</div>`;
-        }
-        if (line.includes('•')) {
-          return `<div class="ml-6 mb-2 flex items-start gap-3"><span class="text-yellow-400 text-xl">•</span><span class="text-gray-200">${line.substring(1)}</span></div>`;
-        }
-        return `<div class="mb-3 text-gray-200 leading-relaxed">${line}</div>`;
-      })
-      .join('');
+  // Format disclaimer text for display
+  const formatDisclaimerContent = (text) => {
+    return text.split('\n').map((line, index) => {
+      if (line.trim() === '') {
+        return <div key={index} style={{ height: '1em' }}></div>;
+      }
+      
+      // Check for special lines
+      if (line.includes('📱') || line.includes('💡') || line.includes('✨')) {
+        return (
+          <div key={index} className="font-bold text-lg mt-4 mb-2 text-blue-800">
+            {line}
+          </div>
+        );
+      }
+      
+      if (line.includes('•')) {
+        return (
+          <div key={index} className="ml-6 mb-2 flex items-start">
+            <span className="mr-2 text-blue-600">•</span>
+            <span className="text-gray-700">{line.substring(1)}</span>
+          </div>
+        );
+      }
+      
+      // Check for warning lines
+      if (line.includes('DILARANG KERAS')) {
+        return (
+          <div key={index} className="font-bold text-red-600 text-lg mb-3">
+            ⚠️ {line}
+          </div>
+        );
+      }
+      
+      if (line.includes('MINIMAL CREATIVE')) {
+        return (
+          <div key={index} className="font-bold text-orange-600 mb-3">
+            {line}
+          </div>
+        );
+      }
+      
+      if (line.includes('Sistem ini dibuat')) {
+        return (
+          <div key={index} className="text-gray-700 mb-3 flex items-center">
+            <span className="text-red-500 mr-2">❤️</span>
+            {line}
+          </div>
+        );
+      }
+      
+      // Regular text
+      return (
+        <div key={index} className="text-gray-700 mb-3 leading-relaxed">
+          {line}
+        </div>
+      );
+    });
   };
 
   return (
@@ -304,90 +349,86 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
           </div>
         </div>
 
-        {/* Disclaimer Modal - Improved Version */}
+        {/* Disclaimer Modal - New Design Like Example */}
         {showDisclaimer && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-md z-60 animate-fadeIn">
-            <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 border-2 border-amber-500/30 p-0 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 animate-slideUp overflow-hidden">
-              
-              {/* Modal Header with Gradient */}
-              <div className="bg-gradient-to-r from-amber-600 to-red-600 p-6 text-center">
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <span className="text-4xl animate-pulse">⚠️</span>
-                  <h2 className="text-3xl font-bold text-white drop-shadow-lg">
-                    DISCLAIMER PENTING
-                  </h2>
-                  <span className="text-4xl animate-pulse">⚠️</span>
-                </div>
-                <div className="w-48 h-1 bg-white/50 mx-auto rounded-full"></div>
-                <p className="text-white/90 mt-2 font-medium">
-                  Harap dibaca dengan seksama sebelum melanjutkan
+          <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 animate-fadeIn">
+            <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 overflow-hidden animate-slideUp border border-gray-300">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-5">
+                <h1 className="text-2xl font-bold mb-1">Pusat Pemberitahuan</h1>
+                <p className="text-blue-100 text-sm">
+                  Berikut adalah semua pesan dan pemberitahuan untuk Anda.
                 </p>
               </div>
-
-              {/* Warning Badge */}
-              <div className="text-center mt-6 px-6">
-                <div className="inline-block bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold py-2 px-6 rounded-full shadow-lg">
-                  ⚠️ DILARANG KERAS MENG COPY-PASTE TEKS ABSENSI KITA!
-                </div>
-              </div>
-
-              {/* Disclaimer Content */}
-              <div className="p-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                <div className="bg-gray-800/50 p-5 rounded-xl border border-amber-500/20 mb-4">
-                  <div 
-                    className="text-white text-lg leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: formatDisclaimerText(disclaimerText) }}
-                  />
-                </div>
-
-                {/* Creator Info */}
-                <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 p-5 rounded-xl border border-blue-500/30 mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-3">
-                    <span className="text-2xl text-blue-400">💙</span>
-                    <h3 className="text-xl font-bold text-blue-300">Sistem ini dibuat dengan</h3>
-                    <span className="text-2xl text-red-500 animate-pulse">❤️</span>
+              
+              {/* Modal Content */}
+              <div className="p-5">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
+                    ⚠️ PENTING
+                  </h2>
+                  
+                  <div className="bg-gray-50 border-l-4 border-yellow-500 p-4 mb-6 rounded-r">
+                    <div className="text-gray-700">
+                      {formatDisclaimerContent(disclaimerText)}
+                    </div>
                   </div>
-                  <p className="text-white text-center mb-4">
-                    <strong className="text-yellow-300">Hargai karya orang lain</strong> dengan tidak menyalin mentah-mentah.<br />
-                    Minimal creative lah boss! 💪
-                  </p>
-                  <div className="flex justify-center">
-                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2 px-6 rounded-full">
-                      © RizzDev - Hak Cipta Dilindungi
+                  
+                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <span className="text-yellow-500 text-2xl">💡</span>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">
+                          Ingat ya!
+                        </h3>
+                        <div className="mt-2 text-sm text-yellow-700">
+                          <p>
+                            Dengan menekan "Mengerti", Anda menyetujui untuk tidak menyalin sistem ini tanpa izin.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-500 mt-8 pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Diterima: {formatNotificationDate()}</span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        🔒 Hak Cipta Dilindungi
+                      </span>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="bg-gray-900/80 p-6 border-t border-gray-700">
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <button
-                    onClick={() => handleAgreeDisclaimer(false)}
-                    className="group relative bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 min-w-[200px]"
-                  >
-                    <span className="text-xl">✅</span>
-                    <span className="text-lg">Saya Setuju & Mengerti</span>
-                    <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
-                  </button>
-                  
+                
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8 pt-5 border-t border-gray-200">
                   <button
                     onClick={() => handleAgreeDisclaimer(true)}
-                    className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-medium py-4 px-8 rounded-xl transition-all duration-300 min-w-[200px] flex items-center justify-center gap-2"
+                    className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                   >
-                    <span className="text-xl">🔕</span>
                     Jangan Tampilkan Lagi Hari Ini
+                  </button>
+                  <button
+                    onClick={() => handleAgreeDisclaimer(false)}
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium shadow-sm"
+                  >
+                    ✅ Saya Mengerti
                   </button>
                 </div>
                 
-                <div className="mt-6 text-center">
-                  <p className="text-amber-300/80 text-sm font-semibold">
-                    🔒 Data absensi dilindungi hak cipta © 2025 RizzDev
-                  </p>
-                  <p className="text-gray-400 text-xs mt-2">
-                    <span className="text-green-400">✅ Setuju</span>: Disclaimer akan muncul lagi besok<br />
-                    <span className="text-amber-400">🔕 Jangan tampilkan lagi</span>: Hanya berlaku untuk hari ini
-                  </p>
+                {/* Footer Note */}
+                <div className="mt-4 text-center text-xs text-gray-500">
+                  <p>Disclaimer ini akan muncul lagi besok. Klik "Jangan Tampilkan Lagi Hari Ini" untuk menyembunyikan hanya hari ini.</p>
+                </div>
+              </div>
+              
+              {/* Modal Footer Decoration */}
+              <div className="bg-gray-50 p-3 border-t border-gray-200">
+                <div className="flex items-center justify-center text-xs text-gray-500">
+                  <span className="mr-2">📌</span>
+                  <span>Sistem Absensi Sekolah • © 2025 RizzDev</span>
                 </div>
               </div>
             </div>
@@ -476,28 +517,12 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
         
-        /* Custom scrollbar for disclaimer */
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(45deg, #f59e0b, #f97316);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(45deg, #eab308, #ea580c);
-        }
-        
         /* Smooth scrolling and selection */
         html {
           scroll-behavior: smooth;
         }
         ::selection {
-          background: rgba(245, 158, 11, 0.5);
+          background: rgba(37, 99, 235, 0.3);
           color: white;
         }
         
