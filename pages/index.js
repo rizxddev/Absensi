@@ -301,7 +301,7 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
             </h1>
             <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full mb-4"></div>
             <p className="text-gray-300 text-sm tracking-wide">
-              Portal Digital Absensi Sekolah Modern
+              SEAGUNERS? BORN TO CONQUER!! 
             </p>
           </div>
 
