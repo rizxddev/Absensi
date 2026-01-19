@@ -385,7 +385,7 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
                         </h3>
                         <div className="mt-2 text-sm text-yellow-700">
                           <p>
-                            Dengan menekan "Mengerti", Anda menyetujui untuk tidak menyalin sistem ini tanpa izin.
+                            Dengan menekan "Mengerti", Anda telah menyetujui ketentuan di atas😉.
                           </p>
                         </div>
                       </div>
