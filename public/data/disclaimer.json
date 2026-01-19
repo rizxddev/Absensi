@@ -1,0 +1,13 @@
+{
+  "id": "disclaimer",
+  "text": "⚠️ **DISCLAIMER!!** ⚠️\n\nDILARANG KERAS MENG COPY-PASTE TEKS ABSENSI KITA!\nMINIMAL CREATIVE LAH BOSS!\n\nSistem ini dibuat dengan ❤️ oleh Rizky.\nHargai karya orang lain dengan tidak menyalin mentah-mentah.\n\nJika butuh sistem serupa, kontak developer untuk kolaborasi!",
+  "created_at": "2026-01-19T08:23:07.201Z",
+  "last_updated": "2026-01-19T08:23:07.201Z",
+  "updated_by": "admin",
+  "version": 1,
+  "metadata": {
+    "type": "warning",
+    "priority": "high",
+    "show_on_load": true
+  }
+}
