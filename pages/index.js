@@ -36,7 +36,7 @@ export default function Home() {
         console.log('Using fallback disclaimer');
         // Fallback to localStorage or default
         const localDisclaimer = localStorage.getItem('disclaimer_text');
-        const defaultText = `⚠️ **DISCLAIMER PENTING** ⚠️
+        const defaultText = `⚠️ **DISCLAIMER** ⚠️
 
 DILARANG KERAS MENG COPY-PASTE TEKS ABSENSI KITA!
 MINIMAL CREATIVE LAH BOSS!
@@ -49,7 +49,7 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
 📱 Contact: 
 • Instagram: @rizkyh358
 • WhatsApp: 0838-6116-3950
-• Email: rizxddev@gmail.com
+• Email: rizxddev@email.com
 
 💡 Tips:
 • Buat sistem sendiri dengan kreativitas
@@ -140,18 +140,18 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
 
   const formatDisclaimerText = (text) => {
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-yellow-300">$1</strong>')
       .split('\n')
       .map(line => {
         if (line.trim() === '') return '<br/>';
-        if (line.includes('⚠️')) return `<div class="text-2xl text-center mb-4">${line}</div>`;
+        if (line.includes('⚠️')) return `<div class="text-3xl text-center mb-4 font-bold text-yellow-400">${line}</div>`;
         if (line.includes('📱') || line.includes('💡') || line.includes('✨')) {
-          return `<div class="font-bold text-yellow-300 mt-4 mb-2">${line}</div>`;
+          return `<div class="font-bold text-yellow-300 mt-6 mb-3 text-lg">${line}</div>`;
         }
         if (line.includes('•')) {
-          return `<div class="ml-4 flex items-start gap-2"><span class="text-yellow-400">•</span>${line.substring(1)}</div>`;
+          return `<div class="ml-6 mb-2 flex items-start gap-3"><span class="text-yellow-400 text-xl">•</span><span class="text-gray-200">${line.substring(1)}</span></div>`;
         }
-        return `<div class="mb-2">${line}</div>`;
+        return `<div class="mb-3 text-gray-200 leading-relaxed">${line}</div>`;
       })
       .join('');
   };
@@ -277,50 +277,89 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
           </div>
         </div>
 
-        {/* Disclaimer Modal */}
+        {/* Disclaimer Modal - Improved Version */}
         {showDisclaimer && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-60 animate-fadeIn">
-            <div className="relative bg-gradient-to-br from-amber-900/90 via-orange-900/90 to-red-900/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-amber-400/50 max-w-2xl w-full mx-4 animate-slideUp">
-              {/* Decorative Elements */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="text-4xl animate-bounce">⚠️</div>
-              </div>
+          <div className="fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-md z-60 animate-fadeIn">
+            <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 border-2 border-amber-500/30 p-0 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 animate-slideUp overflow-hidden">
               
-              <div className="text-center mb-6">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-amber-300 to-yellow-300 bg-clip-text text-transparent mb-3">
-                  ⚠️ DISCLAIMER PENTING ⚠️
-                </h2>
-                <div className="w-48 h-1 bg-gradient-to-r from-amber-500 to-red-500 mx-auto rounded-full mb-4"></div>
-              </div>
-
-              <div className="bg-black/30 p-6 rounded-2xl border border-amber-500/30 mb-6 max-h-96 overflow-y-auto">
-                <div 
-                  className="text-white text-lg whitespace-pre-line leading-relaxed font-medium"
-                  dangerouslySetInnerHTML={{ __html: formatDisclaimerText(disclaimerText) }}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={() => handleAgreeDisclaimer(false)}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all duration-300 flex items-center justify-center gap-2"
-                >
-                  <span className="text-xl">✅</span>
-                  Saya Setuju & Mengerti
-                </button>
-                
-                <button
-                  onClick={() => handleAgreeDisclaimer(true)}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border border-gray-600 text-gray-300 font-medium transition-all duration-300"
-                >
-                  Jangan Tampilkan Lagi
-                </button>
-              </div>
-
-              <div className="mt-6 text-center">
-                <p className="text-amber-300/70 text-sm">
-                  🔒 Data absensi dilindungi hak cipta © RizzDev
+              {/* Modal Header with Gradient */}
+              <div className="bg-gradient-to-r from-amber-600 to-red-600 p-6 text-center">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <span className="text-4xl animate-pulse">⚠️</span>
+                  <h2 className="text-3xl font-bold text-white drop-shadow-lg">
+                    DISCLAIMER PENTING
+                  </h2>
+                  <span className="text-4xl animate-pulse">⚠️</span>
+                </div>
+                <div className="w-48 h-1 bg-white/50 mx-auto rounded-full"></div>
+                <p className="text-white/90 mt-2 font-medium">
+                  Harap dibaca dengan seksama sebelum melanjutkan
                 </p>
+              </div>
+
+              {/* Warning Badge */}
+              <div className="text-center mt-6 px-6">
+                <div className="inline-block bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold py-2 px-6 rounded-full shadow-lg">
+                  ⚠️ DILARANG KERAS MENG COPY-PASTE TEKS ABSENSI KITA!
+                </div>
+              </div>
+
+              {/* Disclaimer Content */}
+              <div className="p-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                <div className="bg-gray-800/50 p-5 rounded-xl border border-amber-500/20 mb-4">
+                  <div 
+                    className="text-white text-lg leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: formatDisclaimerText(disclaimerText) }}
+                  />
+                </div>
+
+                {/* Creator Info */}
+                <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 p-5 rounded-xl border border-blue-500/30 mb-6">
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <span className="text-2xl text-blue-400">💙</span>
+                    <h3 className="text-xl font-bold text-blue-300">Sistem ini dibuat dengan</h3>
+                    <span className="text-2xl text-red-500 animate-pulse">❤️</span>
+                  </div>
+                  <p className="text-white text-center mb-4">
+                    <strong className="text-yellow-300">Hargai karya orang lain</strong> dengan tidak menyalin mentah-mentah.<br />
+                    Minimal creative lah boss! 💪
+                  </p>
+                  <div className="flex justify-center">
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2 px-6 rounded-full">
+                      © RizzDev - Hak Cipta Dilindungi
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="bg-gray-900/80 p-6 border-t border-gray-700">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <button
+                    onClick={() => handleAgreeDisclaimer(false)}
+                    className="group relative bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 min-w-[200px]"
+                  >
+                    <span className="text-xl">✅</span>
+                    <span className="text-lg">Saya Setuju & Mengerti</span>
+                    <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleAgreeDisclaimer(true)}
+                    className="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-300 font-medium py-4 px-8 rounded-xl transition-all duration-300 min-w-[200px]"
+                  >
+                    Jangan Tampilkan Lagi
+                  </button>
+                </div>
+                
+                <div className="mt-6 text-center">
+                  <p className="text-amber-300/80 text-sm font-semibold">
+                    🔒 Data absensi dilindungi hak cipta © 2025 RizzDev
+                  </p>
+                  <p className="text-gray-400 text-xs mt-2">
+                    Dengan menekan "Setuju", Anda menyetujui semua ketentuan di atas
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -409,16 +448,19 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
         .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
         
         /* Custom scrollbar for disclaimer */
-        .bg-black\\/30::-webkit-scrollbar {
+        .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
         }
-        .bg-black\\/30::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 4px;
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
         }
-        .bg-black\\/30::-webkit-scrollbar-thumb {
-          background: linear-gradient(45deg, #f59e0b, #dc2626);
-          border-radius: 4px;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(45deg, #f59e0b, #f97316);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(45deg, #eab308, #ea580c);
         }
         
         /* Smooth scrolling and selection */
@@ -430,10 +472,12 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
           color: white;
         }
         
-        /* Custom styles for disclaimer text */
-        .disclaimer-strong {
-          font-weight: bold;
-          color: #fbbf24;
+        /* Remove any triangle images */
+        img[src*="triangle"], 
+        img[alt*="triangle"],
+        img[src*="segitiga"],
+        img[alt*="segitiga"] {
+          display: none !important;
         }
       `}</style>
     </div>
