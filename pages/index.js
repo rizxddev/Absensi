@@ -11,6 +11,12 @@ export default function Home() {
   const [isLoadingDisclaimer, setIsLoadingDisclaimer] = useState(true);
   const router = useRouter();
 
+  // Helper function to get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+  };
+
   // Load disclaimer from API
   useEffect(() => {
     const loadDisclaimer = async () => {
@@ -39,7 +45,6 @@ export default function Home() {
         const defaultText = `⚠️ **DISCLAIMER** ⚠️
 
 DILARANG KERAS MENG COPY-PASTE TEKS ABSENSI KITA!
-MINIMAL CREATIVE LAH BOSS!
 
 Sistem ini dibuat dengan ❤️ oleh Rizky.
 Hargai karya orang lain dengan tidak menyalin mentah-mentah.
@@ -49,7 +54,7 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
 📱 Contact: 
 • Instagram: @rizkyh358
 • WhatsApp: 0838-6116-3950
-• Email: rizxddev@email.com
+• Email: rzxddev@gmail.com
 
 💡 Tips:
 • Buat sistem sendiri dengan kreativitas
@@ -66,12 +71,28 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
       } finally {
         setIsLoadingDisclaimer(false);
         
-        // Check if user has agreed before
-        const hasAgreed = localStorage.getItem('disclaimer_agreed');
-        const dontShowAgain = localStorage.getItem('dont_show_disclaimer_again');
+        // Check disclaimer status with date-based logic
+        const today = getTodayDate();
+        const lastAgreedDate = localStorage.getItem('disclaimer_last_agreed_date');
+        const dontShowAgainDate = localStorage.getItem('dont_show_disclaimer_until');
         
-        // Show disclaimer only if user hasn't agreed AND hasn't chosen "Don't show again"
-        if (!hasAgreed && dontShowAgain !== 'true') {
+        // Logic: Show disclaimer if:
+        // 1. User never agreed before, OR
+        // 2. User agreed but not today, OR
+        // 3. "Don't show again" was clicked but for a different day
+        
+        let shouldShowDisclaimer = true;
+        
+        // Check "Don't show again" option (expires at end of day)
+        if (dontShowAgainDate === today) {
+          shouldShowDisclaimer = false;
+        }
+        // Check if user agreed today
+        else if (lastAgreedDate === today) {
+          shouldShowDisclaimer = false;
+        }
+        
+        if (shouldShowDisclaimer) {
           // Show after 1 second
           setTimeout(() => {
             setShowDisclaimer(true);
@@ -128,12 +149,18 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
   };
 
   const handleAgreeDisclaimer = (dontShowAgain = false) => {
-    localStorage.setItem('disclaimer_agreed', 'true');
-    localStorage.setItem('disclaimer_agreed_at', new Date().toISOString());
+    const today = getTodayDate();
     
     if (dontShowAgain) {
-      localStorage.setItem('dont_show_disclaimer_again', 'true');
+      // Set "don't show again" only for today
+      localStorage.setItem('dont_show_disclaimer_until', today);
+    } else {
+      // User agreed today
+      localStorage.setItem('disclaimer_last_agreed_date', today);
     }
+    
+    // Also store the timestamp for tracking
+    localStorage.setItem('disclaimer_last_interaction', new Date().toISOString());
     
     setShowDisclaimer(false);
   };
@@ -346,9 +373,10 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
                   
                   <button
                     onClick={() => handleAgreeDisclaimer(true)}
-                    className="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-300 font-medium py-4 px-8 rounded-xl transition-all duration-300 min-w-[200px]"
+                    className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-medium py-4 px-8 rounded-xl transition-all duration-300 min-w-[200px] flex items-center justify-center gap-2"
                   >
-                    Jangan Tampilkan Lagi
+                    <span className="text-xl">🔕</span>
+                    Jangan Tampilkan Lagi Hari Ini
                   </button>
                 </div>
                 
@@ -357,7 +385,8 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
                     🔒 Data absensi dilindungi hak cipta © 2025 RizzDev
                   </p>
                   <p className="text-gray-400 text-xs mt-2">
-                    Dengan menekan "Setuju", Anda menyetujui semua ketentuan di atas
+                    <span className="text-green-400">✅ Setuju</span>: Disclaimer akan muncul lagi besok<br />
+                    <span className="text-amber-400">🔕 Jangan tampilkan lagi</span>: Hanya berlaku untuk hari ini
                   </p>
                 </div>
               </div>
