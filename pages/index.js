@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
 export default function Home() {
@@ -10,6 +10,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingDisclaimer, setIsLoadingDisclaimer] = useState(true);
   const router = useRouter();
+  const modalContentRef = useRef(null);
 
   // Helper function to get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
@@ -29,6 +30,19 @@ export default function Home() {
     
     return `${day}/${month}/${year}, ${hours}.${minutes}.${seconds}`;
   };
+
+  // Prevent body scroll when disclaimer is open
+  useEffect(() => {
+    if (showDisclaimer) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showDisclaimer]);
 
   // Load disclaimer from API
   useEffect(() => {
@@ -90,7 +104,7 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
         if (dontShowAgainDate === today) {
           shouldShowDisclaimer = false;
         }
-        // Check if useagreed today
+        // Check if user agreed today
         else if (lastAgreedDate === today) {
           shouldShowDisclaimer = false;
         }
@@ -351,18 +365,27 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
 
         {/* Disclaimer Modal - New Design Like Example */}
         {showDisclaimer && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 animate-fadeIn">
-            <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 overflow-hidden animate-slideUp border border-gray-300">
+          <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 animate-fadeIn p-4" 
+               style={{ overscrollBehavior: 'contain' }}>
+            <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-auto overflow-hidden animate-slideUp border border-gray-300 flex flex-col max-h-[90vh]">
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-5">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-5 flex-shrink-0">
                 <h1 className="text-2xl font-bold mb-1">Pusat Pemberitahuan</h1>
                 <p className="text-blue-100 text-sm">
                   Berikut adalah semua pesan dan pemberitahuan untuk Anda.
                 </p>
               </div>
               
-              {/* Modal Content */}
-              <div className="p-5">
+              {/* Modal Content - Scrollable Area */}
+              <div 
+                ref={modalContentRef}
+                className="p-5 flex-grow overflow-y-auto"
+                style={{ 
+                  overscrollBehavior: 'contain',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#d1d5db #f3f4f6'
+                }}
+              >
                 <div className="mb-6">
                   <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
                     ⚠️ PENTING
@@ -385,7 +408,7 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
                         </h3>
                         <div className="mt-2 text-sm text-yellow-700">
                           <p>
-                            Dengan menekan "Mengerti", Anda telah menyetujui ketentuan di atas😉.
+                            Dengan menekan "Mengerti", Anda telah menyetujui ketentuan di atas😉
                           </p>
                         </div>
                       </div>
@@ -401,18 +424,20 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
                     </div>
                   </div>
                 </div>
-                
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8 pt-5 border-t border-gray-200">
+              </div>
+              
+              {/* Action Buttons - Fixed at bottom */}
+              <div className="bg-gray-50 p-5 border-t border-gray-200 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row gap-3 justify-end">
                   <button
                     onClick={() => handleAgreeDisclaimer(true)}
-                    className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium whitespace-nowrap"
                   >
                     Jangan Tampilkan Lagi Hari Ini
                   </button>
                   <button
                     onClick={() => handleAgreeDisclaimer(false)}
-                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium shadow-sm"
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium shadow-sm whitespace-nowrap"
                   >
                     ✅ Saya Mengerti
                   </button>
@@ -422,11 +447,8 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
                 <div className="mt-4 text-center text-xs text-gray-500">
                   <p>Disclaimer ini akan muncul lagi besok. Klik "Jangan Tampilkan Lagi Hari Ini" untuk menyembunyikan hanya hari ini.</p>
                 </div>
-              </div>
-              
-              {/* Modal Footer Decoration */}
-              <div className="bg-gray-50 p-3 border-t border-gray-200">
-                <div className="flex items-center justify-center text-xs text-gray-500">
+                
+                <div className="flex items-center justify-center text-xs text-gray-500 mt-3">
                   <span className="mr-2">📌</span>
                   <span>Sistem Absensi Sekolah • © 2025 RizzDev</span>
                 </div>
@@ -517,6 +539,22 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
         
+        /* Custom scrollbar for disclaimer modal */
+        .disclaimer-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .disclaimer-scrollbar::-webkit-scrollbar-track {
+          background: #f3f4f6;
+          border-radius: 3px;
+        }
+        .disclaimer-scrollbar::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 3px;
+        }
+        .disclaimer-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+        
         /* Smooth scrolling and selection */
         html {
           scroll-behavior: smooth;
@@ -532,6 +570,17 @@ Jika butuh sistem serupa, kontak developer untuk kolaborasi!
         img[src*="segitiga"],
         img[alt*="segitiga"] {
           display: none !important;
+        }
+        
+        /* Prevent bounce/elastic scroll on iOS */
+        body {
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: none;
+        }
+        
+        /* Specific overscroll behavior for modal */
+        .modal-container {
+          overscroll-behavior: contain;
         }
       `}</style>
     </div>
