@@ -24,6 +24,7 @@ export default function Admin2() {
   const [importText, setImportText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [isSaving, setIsSaving] = useState(false);
 
   // Ambil data siswi
   const fetchSiswiShalat = async () => {
@@ -86,28 +87,8 @@ export default function Admin2() {
     await simpanSiswiShalat(updated);
   };
 
-  const simpanAbsensiShalat = async () => {
-    const hasil = siswiShalat.map(s => ({
-      nama: s.nama,
-      shalat: document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak"
-    }));
-    const data = { kelas, wali_kelas: wali, absensi: { [tanggal]: hasil } };
-
-    const res = await fetch('/api/updateHasil2', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    
-    if (json.success) {
-      showNotification(`Absensi siswi tersimpan (Tanggal ${tanggal})!`, 'success');
-    } else {
-      showNotification('Gagal menyimpan absensi siswi!', 'error');
-    }
-  };
-
-  const salinHasil = () => {
+  // Fungsi untuk generate teks hasil
+  const generateHasilText = () => {
     const hasil = siswiShalat.map((s, i) => {
       const status = document.querySelector(`input[name="shalat_${s.id}"]:checked`)?.value || "Tidak";
       return { nama: s.nama, shalat: status };
@@ -144,13 +125,56 @@ export default function Admin2() {
     teks += `🔗 Lihat Hasil Absen:\nhttps://absensi-xic.vercel.app\n\n`;
     teks += `© 2025 - Sistem Absensi Sekolah by Rizky`;
 
+    return { teks, hasil };
+  };
+
+  // Fungsi baru: Simpan dan Salin sekaligus
+  const simpanDanSalin = async () => {
+    setIsSaving(true);
+    
+    try {
+      // 1. Simpan ke database terlebih dahulu
+      const { hasil } = generateHasilText();
+      const data = { 
+        kelas, 
+        wali_kelas: wali, 
+        absensi: { [tanggal]: hasil } 
+      };
+
+      const res = await fetch('/api/updateHasil2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const json = await res.json();
+      
+      if (json.success) {
+        // 2. Setelah berhasil disimpan, salin ke clipboard
+        const { teks } = generateHasilText();
+        setSalinText(teks);
+        navigator.clipboard.writeText(teks);
+        showNotification('Absensi berhasil disimpan dan hasil disalin ke clipboard!', 'success');
+      } else {
+        showNotification('Gagal menyimpan absensi siswi!', 'error');
+      }
+    } catch (error) {
+      showNotification('Error menyimpan absensi', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Fungsi lama salinHasil untuk tombol salin di preview
+  const salinHasil = () => {
+    const { teks } = generateHasilText();
     setSalinText(teks);
     navigator.clipboard.writeText(teks);
     showNotification('Hasil absensi berhasil disalin ke clipboard!', 'success');
   };
 
   // Import dari teks rekap
-  const importAbsensi = () => {
+  const importAbsensi = async () => {
     const tanggalMatch = importText.match(/Tanggal:\s*(\d{4}-\d{2}-\d{2})/);
     if (!tanggalMatch) {
       showNotification('Tanggal tidak ditemukan di teks!', 'error');
@@ -180,10 +204,10 @@ export default function Admin2() {
       }
     });
 
-    simpanAbsensiShalat();
+    // Gunakan fungsi simpanDanSalin setelah import
+    await simpanDanSalin();
     setShowImport(false);
     setImportText('');
-    showNotification(`Absensi diimpor & disimpan untuk tanggal ${tglRekap}!`, 'success');
   };
 
   // Filtered siswi berdasarkan pencarian
@@ -281,6 +305,13 @@ export default function Admin2() {
             <div className="text-xl">✨</div>
             <span className="font-medium">{notification.message}</span>
           </div>
+        </div>
+      )}
+
+      {/* Loading Overlay */}
+      {isSaving && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-40">
+          <div className="w-16 h-16 border-4 border-transparent border-t-pink-500 border-r-purple-500 rounded-full animate-spin"></div>
         </div>
       )}
 
@@ -458,23 +489,26 @@ export default function Admin2() {
         )}
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons - TOMBOL DIUBAH DI SINI */}
       <div className="sticky bottom-4 bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl rounded-xl border border-gray-700/50 p-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            onClick={simpanAbsensiShalat}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 font-medium transition-all duration-300 flex items-center justify-center gap-2"
+            onClick={simpanDanSalin}
+            disabled={isSaving}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 font-medium transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FiSave />
-            Simpan Absensi
-          </button>
-          
-          <button
-            onClick={salinHasil}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 font-medium transition-all duration-300 flex items-center justify-center gap-2"
-          >
-            <FiCopy />
-            Salin Hasil
+            {isSaving ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Menyimpan...
+              </>
+            ) : (
+              <>
+                <FiSave className="mr-1" />
+                <FiCopy className="mr-1" />
+                Simpan & Salin
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -488,7 +522,7 @@ export default function Admin2() {
           </h3>
           {salinText && (
             <button
-              onClick={() => navigator.clipboard.writeText(salinText)}
+              onClick={salinHasil}
               className="text-xs px-3 py-1 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 transition-colors flex items-center gap-1"
             >
               <FiCopy size={12} />
@@ -503,7 +537,7 @@ export default function Admin2() {
               text-gray-200 text-sm font-mono resize-none focus:outline-none focus:border-pink-500/50"
             readOnly
             value={salinText}
-            placeholder="Hasil absensi akan muncul di sini setelah menekan tombol 'Salin Hasil'..."
+            placeholder="Hasil absensi akan muncul di sini setelah menekan tombol 'Simpan & Salin'..."
           />
         </div>
       </div>
@@ -554,9 +588,10 @@ export default function Admin2() {
               </button>
               <button
                 onClick={importAbsensi}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-all duration-300"
+                disabled={isSaving}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Import & Simpan
+                {isSaving ? 'Mengimpor...' : 'Import & Simpan'}
               </button>
             </div>
           </div>
