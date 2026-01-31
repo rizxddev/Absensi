@@ -126,42 +126,7 @@ export default function Admin() {
     await simpanSiswa(updated);
   };
 
-  const simpanAbsensi = async () => {
-    setIsLoading(true);
-    const hasil = siswaShalat.map(s => {
-      const selected = document.querySelector(`input[name="shalat_${s.id}"]:checked`);
-      return {
-        nama: s.nama,
-        shalat: selected ? selected.value : "Tidak"
-      };
-    });
-
-    const data = {
-      kelas,
-      wali_kelas: wali,
-      absensi: { [tanggal]: hasil }
-    };
-
-    try {
-      const res = await fetch('/api/updateHasil', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const json = await res.json();
-      if (json.success) {
-        showNotification('Absensi shalat berhasil disimpan!', 'success');
-      } else {
-        showNotification('Gagal menyimpan absensi', 'error');
-      }
-    } catch (error) {
-      showNotification('Error menyimpan absensi', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const salinHasil = () => {
+  const generateHasilText = () => {
     const hasil = siswaShalat.map(s => {
       const selected = document.querySelector(`input[name="shalat_${s.id}"]:checked`);
       return {
@@ -197,6 +162,48 @@ export default function Admin() {
     teks += `🔗 Lihat Hasil: https://absensi-xic.vercel.app\n`;
     teks += `© 2025 - Sistem Absensi Sekolah by Rizky`;
 
+    return { teks, hasil };
+  };
+
+  // Fungsi baru: Simpan dan Salin sekaligus
+  const simpanDanSalin = async () => {
+    setIsLoading(true);
+    
+    // 1. Simpan ke database terlebih dahulu
+    const { hasil, teks } = generateHasilText();
+    
+    const data = {
+      kelas,
+      wali_kelas: wali,
+      absensi: { [tanggal]: hasil }
+    };
+
+    try {
+      const res = await fetch('/api/updateHasil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      
+      if (json.success) {
+        // 2. Setelah berhasil disimpan, salin ke clipboard
+        setSalinText(teks);
+        navigator.clipboard.writeText(teks);
+        showNotification('Absensi berhasil disimpan dan hasil disalin ke clipboard!', 'success');
+      } else {
+        showNotification('Gagal menyimpan absensi', 'error');
+      }
+    } catch (error) {
+      showNotification('Error menyimpan absensi', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fungsi lama salinHasil untuk tombol salin di preview
+  const salinHasil = () => {
+    const { teks } = generateHasilText();
     setSalinText(teks);
     navigator.clipboard.writeText(teks);
     showNotification('Hasil absensi berhasil disalin ke clipboard!', 'success');
@@ -608,24 +615,17 @@ export default function Admin() {
         )}
       </div>
 
-      {/* Action Buttons Fixed at Bottom */}
+      {/* Action Buttons Fixed at Bottom - TOMBOL DIUBAH DI SINI */}
       <div className="sticky bottom-4 bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl rounded-xl border border-gray-700/50 p-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            onClick={simpanAbsensi}
+            onClick={simpanDanSalin}
             disabled={isLoading}
             className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 font-medium transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FiSave />
-            Simpan Absensi
-          </button>
-          
-          <button
-            onClick={salinHasil}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 font-medium transition-all duration-300 flex items-center justify-center gap-2"
-          >
-            <FiCopy />
-            Salin Hasil
+            <FiSave className="mr-1" />
+            <FiCopy className="mr-1" />
+            Simpan & Salin
           </button>
         </div>
       </div>
@@ -639,7 +639,7 @@ export default function Admin() {
           </h3>
           {salinText && (
             <button
-              onClick={() => navigator.clipboard.writeText(salinText)}
+              onClick={salinHasil}
               className="text-xs px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 transition-colors flex items-center gap-1"
             >
               <FiCopy size={12} />
@@ -654,7 +654,7 @@ export default function Admin() {
               text-gray-200 text-sm font-mono resize-none focus:outline-none focus:border-blue-500/50"
             readOnly
             value={salinText}
-            placeholder="Hasil absensi akan muncul di sini setelah menekan tombol 'Salin Hasil'..."
+            placeholder="Hasil absensi akan muncul di sini setelah menekan tombol 'Simpan & Salin'..."
           />
         </div>
       </div>
